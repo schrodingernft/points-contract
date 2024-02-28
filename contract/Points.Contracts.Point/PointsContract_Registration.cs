@@ -48,10 +48,7 @@ public partial class PointsContract
             }
         }
 
-        Context.Fire(new Registered
-        {
-            RegistrationRecordList = input.RegistrationRecordList
-        });
+        Context.Fire(new Registered { RegistrationRecordList = input.RegistrationRecordList });
 
         return new Empty();
     }
