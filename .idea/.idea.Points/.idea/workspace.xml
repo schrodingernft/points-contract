@@ -56,12 +56,6 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/93f428b47e324600a3408347f8e78a427f000/b6/741caa2b/ContractTestBase`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a00a61a00d764263895d83274fcf215e6c00/d9/47ab592f/CSharpSmartContractAbstract.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/ee7255e54cae42ae9201ff4c74fa4b7d5e00/a0/b68b6f8a/Executive.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/tangchen/Project/github/points-contract/contract/Points.Contracts.Point/PointsContract_Actions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/tangchen/Project/github/points-contract/contract/Points.Contracts.Point/PointsContract_Actions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/tangchen/Project/github/points-contract/contract/Points.Contracts.Point/PointsContract_Actions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/tangchen/Project/github/points-contract/contract/Points.Contracts.Point/PointsContract_Actions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/tangchen/Project/github/points-contract/test/Points.Contracts.Point.Tests/ContractInitializationProvider/DAppContractTestDeploymentListProvider.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Users/tangchen/Project/github/points-contract/test/Points.Contracts.Point.Tests/PointsContractTests_Admin.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -71,6 +65,9 @@
     <option name="selectedTabId" value="Toolset" />
   </component>
   <component name="ProjectId" id="2Uup6zXSc6XL1jcdcnGeVfBEEJ2" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -91,7 +88,7 @@
     ]
   }
 }</component>
-  <component name="RunManager" selected=".NET Project.AElf.Boilerplate.ContractPatcher">
+  <component name="RunManager">
     <configuration name="AElf.Boilerplate.ContractPatcher" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
       <option name="PROGRAM_PARAMETERS" value="" />
@@ -241,5 +238,9 @@
     <MESSAGE value="fix ut." />
     <MESSAGE value="remove apply limit method" />
     <option name="LAST_COMMIT_MESSAGE" value="remove apply limit method" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

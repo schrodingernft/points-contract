@@ -160,7 +160,7 @@ message PointsRecordList {
   repeated PointsRecord points_records = 1;
 }
 // Log Event
-message InviterApplyed {
+message InviterApplied {
     option (aelf.is_event) = true;
     string domain = 1;
     string service = 2;

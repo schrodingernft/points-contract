@@ -97,7 +97,7 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
             Inviter = Context.Sender
         };
         State.ApplyCount[Context.Sender][input.Service] += 1;
-        Context.Fire(new InviterApplyed
+        Context.Fire(new InviterApplied
         {
             Domain = input.Domain,
             Service = input.Service,
