@@ -1,0 +1,174 @@
+// the version of the language, use proto3 for contracts
+syntax = "proto3";
+
+import "aelf/core.proto";
+import "aelf/options.proto";
+import "acs12.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Points.Contracts.Point";
+
+service PointsContract {
+  option (aelf.base) = "acs12.proto";
+  option (aelf.csharp_state) = "Points.Contracts.Point.PointsContractState";
+
+  // Initialize.
+  rpc Initialize(InitializeInput) returns (google.protobuf.Empty) {}
+  rpc SetAdmin(aelf.Address) returns (google.protobuf.Empty) {}
+  rpc GetAdmin (google.protobuf.Empty) returns (aelf.Address){option (aelf.is_view) = true;}
+  
+  rpc CreatePoint(CreatePointInput) returns (google.protobuf.Empty) {}
+  
+  rpc RecordRegistration(RecordRegistrationInput) returns (google.protobuf.Empty) {}
+  rpc ApplyToOperator(ApplyToOperatorInput) returns (google.protobuf.Empty) {}
+  rpc PointsSettlement(PointsSettlementInput) returns (google.protobuf.Empty) {}
+  rpc SetMaxRecordListCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
+  rpc SetMaxRegistrationListCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
+  rpc SetMaxApplyCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
+
+  // Domain limit
+  rpc SetReservedDomainList(SetReservedDomainListInput) returns (google.protobuf.Empty){}
+  rpc GetReservedDomainList(google.protobuf.Empty) returns (GetReservedDomainListOutput){option (aelf.is_view) = true;}
+  
+  // services
+  rpc SetServicesEarningRules(SetServicesEarningRulesInput) returns (google.protobuf.Empty) {}
+  rpc GetServicesEarningRules(GetServicesEarningRulesInput) returns (GetServicesEarningRulesOutput) {option (aelf.is_view) = true;}
+  rpc GetMaxRecordListCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
+  rpc GetMaxApplyCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
+  rpc GetDomainApplyInfo(google.protobuf.StringValue) returns (DomainOperatorRelationship){option (aelf.is_view) = true;}
+}
+
+message InitializeInput {
+    aelf.Address admin = 1;
+    int32 max_record_list_count = 2;
+    int32 max_apply_count = 3;
+    int32 max_registration_list_count = 4;
+}
+
+message RecordRegistrationInput {
+    RegistrationRecordList registration_record_list = 1;
+}
+message RegistrationRecordList {
+    repeated RegistrationRecords registration_records = 1;
+}
+
+message RegistrationRecords {
+    string service = 1;
+    repeated RegistrationRecordDetail registration_record_detail = 2;
+}
+
+message RegistrationRecordDetail {
+    aelf.Address registrant = 1;
+    string domain = 2;
+    google.protobuf.Timestamp create_time = 3;
+}
+
+message RegistrationInfo {
+    string domain = 1;
+    google.protobuf.Timestamp create_time = 2;
+}
+
+message Registered {
+    option (aelf.is_event) = true;
+    RegistrationRecordList registration_record_list = 1;
+}
+
+// services
+message SetServicesEarningRulesInput {
+    string service = 1;
+    EarningRuleList services_earning_rules = 2;
+}
+
+message ServicesEarningRulesChanged {
+    option (aelf.is_event) = true;
+    string service = 1;
+    EarningRuleList services_earning_rules = 2;
+}
+
+message GetServicesEarningRulesInput {
+    string service = 1;
+}
+
+message GetServicesEarningRulesOutput {
+    aelf.Address Admin = 1;
+    EarningRuleList service_earning_rules = 2;
+}
+
+message EarningRuleList {
+    repeated EarningRule earning_rules = 1;
+}
+
+message EarningRule {
+    string action_name = 1;
+    string point_name = 2;
+    int64 user_points = 3; 
+    int64 kol_points = 4; 
+    int64 inviter_points = 5; 
+}
+
+message PointInfo {
+    string token_name = 1;
+    int32 decimals = 2;
+}
+
+message SetReservedDomainListInput {
+    ReservedDomainList reserved_domain_list = 1;
+}
+
+message GetReservedDomainListOutput {
+    ReservedDomainList reserved_domain_list = 1;
+}
+
+message ReservedDomainList {
+    repeated string domains = 1;
+}
+
+message DomainOperatorRelationship {
+    string domain = 1;
+    aelf.Address invitee = 2; 
+    aelf.Address inviter = 3; 
+}
+
+message CreatePointInput {
+    string token_name = 1;
+    int32 decimals = 2;
+}
+
+message PointCreated {
+    option (aelf.is_event) = true;
+    string token_name = 1;
+    int32 decimals = 2;
+}
+
+message ApplyToOperatorInput {
+    string domain = 1;
+    string service = 2;
+    aelf.Address invitee = 3;
+}
+message PointsSettlementInput {
+    repeated PointsRecord points_records = 1;
+}
+message PointsRecord {
+    aelf.Address pointer_address = 1;
+    string points_name = 2;
+    int64 amout = 3;
+    string dapp_name = 4;
+}
+
+message PointsRecordList {
+  repeated PointsRecord points_records = 1;
+}
+// Log Event
+message InviterApplyed {
+    option (aelf.is_event) = true;
+    string domain = 1;
+    string service = 2;
+    aelf.Address invitee = 3;
+    aelf.Address inviter = 4;
+}
+
+message PointsRecorded {
+    option (aelf.is_event) = true;
+    PointsRecordList points_record_list = 1;
+}

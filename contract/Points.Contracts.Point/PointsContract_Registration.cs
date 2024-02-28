@@ -1,5 +1,6 @@
 using System.Linq;
 using AElf;
+using AElf.Sdk.CSharp;
 using Google.Protobuf.WellKnownTypes;
 
 namespace Points.Contracts.Point;
@@ -10,7 +11,9 @@ public partial class PointsContract
     {
         AssertInitialized();
         AssertAdmin();
-        Assert(input.RegistrationRecordList != null && input.RegistrationRecordList.RegistrationRecords.Count > 0,
+        Assert(input.RegistrationRecordList != null
+               && input.RegistrationRecordList.RegistrationRecords.Count > 0
+               && input.RegistrationRecordList.RegistrationRecords.Count <= State.MaxRegistrationListCount.Value,
             "Invalid input.");
 
         foreach (var registrationRecord in input.RegistrationRecordList.RegistrationRecords)
@@ -32,8 +35,8 @@ public partial class PointsContract
                 // Assert(createTime < Context.CurrentBlockTime, "Wrong CreateTime.");
 
                 Assert(State.DomainOperatorRelationshipMap[domain] != null, "Domain not exist.");
-                Assert(record.Registrant != State.DomainOperatorRelationshipMap[domain].Invitee,
-                    "Cannot register your own domain name.");
+                // Assert(record.Registrant != State.DomainOperatorRelationshipMap[domain].Invitee,
+                //     "Cannot register your own domain name.");
                 Assert(State.RegistrationMap[serviceName]?[registrant] == null,
                     $"This user has already registered in {serviceName}");
 
@@ -44,6 +47,11 @@ public partial class PointsContract
                 };
             }
         }
+
+        Context.Fire(new Registered
+        {
+            RegistrationRecordList = input.RegistrationRecordList
+        });
 
         return new Empty();
     }

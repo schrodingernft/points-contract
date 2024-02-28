@@ -12,10 +12,11 @@ public partial class PointsContractState : ContractState
     public MappedState<string, EarningRuleList> ServicesEarningRulesMap { get; set; }
     public MappedState<string, DomainOperatorRelationship> DomainOperatorRelationshipMap { get; set; }
     public MappedState<Address, string, int> ApplyCount { get; set; }
-    
+
     public MappedState<string, Address, RegistrationInfo> RegistrationMap { get; set; }
     public MappedState<string, int> ApplyLimitMap { get; set; }
     public SingletonState<int> MaxRecordListCount { get; set; }
+    public SingletonState<int> MaxRegistrationListCount { get; set; }
     public SingletonState<int> MaxApplyCount { get; set; }
     public MappedState<string, Address, string, long> PointsPool { get; set; }
     public MappedState<string, PointInfo> PointsInfos { get; set; }

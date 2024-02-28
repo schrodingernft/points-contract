@@ -109,12 +109,6 @@
         <ContractStub Include="..\..\protobuf\acs1.proto">
             <Link>Protobuf\Proto\acs1.proto</Link>
         </ContractStub>
-        <ContractStub Include="..\..\protobuf\acs3.proto">
-            <Link>Protobuf\Proto\acs3.proto</Link>
-        </ContractStub>
-        <ContractStub Include="..\..\protobuf\acs4.proto">
-            <Link>Protobuf\Proto\acs4.proto</Link>
-        </ContractStub>
     </ItemGroup>
     
     <ItemGroup>

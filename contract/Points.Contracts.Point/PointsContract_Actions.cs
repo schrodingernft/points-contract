@@ -12,6 +12,7 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         Assert(!State.Initialized.Value, "Already initialized.");
         Assert(input.MaxRecordListCount > 0, "Invalid MaxRecordListCount.");
         Assert(input.MaxApplyCount > 0, "Invalid MaxApplyCount.");
+        Assert(input.MaxRegistrationListCount > 0, "Invalid MaxRegistrationListCount.");
 
         State.GenesisContract.Value = Context.GetZeroSmartContractAddress();
         Assert(State.GenesisContract.GetContractAuthor.Call(Context.Self) == Context.Sender, "No permission.");
@@ -54,6 +55,16 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         Assert(input is { Value: > 0 }, "Invalid input.");
 
         State.MaxRecordListCount.Value = input.Value;
+        return new Empty();
+    }
+
+    public override Empty SetMaxRegistrationListCount(Int32Value input)
+    {
+        AssertInitialized();
+        AssertAdmin();
+        Assert(input is { Value: > 0 }, "Invalid input.");
+
+        State.MaxRegistrationListCount.Value = input.Value;
         return new Empty();
     }
 
@@ -106,7 +117,8 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         {
             var pointInfo = State.PointsInfos[pointRecord.PointsName];
             Assert(pointInfo != null, $"invalid PointsName:{pointRecord.PointsName}");
-            State.PointsPool[pointRecord.DappName][pointRecord.PointerAddress][pointRecord.PointsName] += pointRecord.Amout;
+            State.PointsPool[pointRecord.DappName][pointRecord.PointerAddress][pointRecord.PointsName] +=
+                pointRecord.Amout;
         }
 
         Context.Fire(new PointsRecorded
