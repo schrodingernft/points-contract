@@ -1,0 +1,17 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=11cd71a3_002D6bef_002D4c32_002Daccf_002Dc9798e3ff36a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="InitializeTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::6A2AD01F-5E88-4D61-8177-14553E4BDB69::net6.0::Points.Contracts.Point.PointsContractTests.InitializeTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=155b478b_002D3ddb_002D4d08_002Dbfbd_002Ddb1af4e13787/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" IsLocked="True" Name="InitializeTests #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::6A2AD01F-5E88-4D61-8177-14553E4BDB69::net6.0::Points.Contracts.Point.PointsContractTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=871af6de_002D74cc_002D40d7_002D9a93_002D207fc95a4879/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="InitializeTests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::6A2AD01F-5E88-4D61-8177-14553E4BDB69::net6.0::Points.Contracts.Point.PointsContractTests.InitializeTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::6A2AD01F-5E88-4D61-8177-14553E4BDB69::net6.0::Points.Contracts.Point.PointsContractTests.InitializeTests_Fail&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
