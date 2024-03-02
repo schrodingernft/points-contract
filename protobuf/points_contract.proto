@@ -16,83 +16,163 @@ service PointsContract {
   // Initialize.
   rpc Initialize(InitializeInput) returns (google.protobuf.Empty) {}
   rpc SetAdmin(aelf.Address) returns (google.protobuf.Empty) {}
-  rpc GetAdmin (google.protobuf.Empty) returns (aelf.Address){option (aelf.is_view) = true;}
-  
-  rpc CreatePoint(CreatePointInput) returns (google.protobuf.Empty) {}
-  
-  rpc RecordRegistration(RecordRegistrationInput) returns (google.protobuf.Empty) {}
-  rpc ApplyToOperator(ApplyToOperatorInput) returns (google.protobuf.Empty) {}
-  rpc PointsSettlement(PointsSettlementInput) returns (google.protobuf.Empty) {}
-  rpc SetMaxRecordListCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
-  rpc SetMaxRegistrationListCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
-  rpc SetMaxApplyCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
-
-  // Domain limit
+  rpc GetAdmin (google.protobuf.Empty) returns (aelf.Address){ option (aelf.is_view) = true; }
   rpc SetReservedDomainList(SetReservedDomainListInput) returns (google.protobuf.Empty){}
   rpc GetReservedDomainList(google.protobuf.Empty) returns (GetReservedDomainListOutput){option (aelf.is_view) = true;}
+  rpc CreatePoint(CreatePointInput) returns (google.protobuf.Empty) {}
+  rpc SetMaxApplyCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
   
-  // services
-  rpc SetServicesEarningRules(SetServicesEarningRulesInput) returns (google.protobuf.Empty) {}
-  rpc GetServicesEarningRules(GetServicesEarningRulesInput) returns (GetServicesEarningRulesOutput) {option (aelf.is_view) = true;}
-  rpc GetMaxRecordListCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
-  rpc GetMaxApplyCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
+  rpc Join(JoinInput) returns (google.protobuf.Empty) {}
+  // rpc Settle(SettleInput) returns (google.protobuf.Empty) {}
+  rpc GetPointsBalance(GetPointsBalanceInput) returns (GetPointsBalanceOutput) { option (aelf.is_view) = true; }
+  rpc SetDappInformation(SetDappInformationInput) returns (google.protobuf.Empty) {}
+  rpc GetDappInformation(GetDappInformationInput) returns (GetDappInformationOutput) { option (aelf.is_view) = true; }
+  rpc SetSelfIncreasingPointsRules(SetSelfIncreasingPointsRulesInput) returns (google.protobuf.Empty) {}
+  rpc GetSelfIncreasingPointsRule(GetSelfIncreasingPointsRuleInput) returns (GetSelfIncreasingPointsRuleOutput) { option (aelf.is_view) = true; }
+  rpc ApplyToOperator(ApplyToOperatorInput) returns (google.protobuf.Empty) {}
   rpc GetDomainApplyInfo(google.protobuf.StringValue) returns (DomainOperatorRelationship){option (aelf.is_view) = true;}
+  rpc GetMaxApplyCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
 }
 
+// NEW
 message InitializeInput {
     aelf.Address admin = 1;
-    int32 max_record_list_count = 2;
-    int32 max_apply_count = 3;
-    int32 max_registration_list_count = 4;
 }
 
-message RecordRegistrationInput {
-    RegistrationRecordList registration_record_list = 1;
-}
-message RegistrationRecordList {
-    repeated RegistrationRecords registration_records = 1;
-}
-
-message RegistrationRecords {
-    string service = 1;
-    repeated RegistrationRecordDetail registration_record_detail = 2;
+message JoinInput {
+    aelf.Hash dapp_id = 1; 
+    string domain = 2; // 
+    aelf.Address registrant = 3;
 }
 
-message RegistrationRecordDetail {
-    aelf.Address registrant = 1;
-    string domain = 2;
-    google.protobuf.Timestamp create_time = 3;
-}
-
-message RegistrationInfo {
-    string domain = 1;
-    google.protobuf.Timestamp create_time = 2;
-}
-
-message Registered {
+message Joined {
     option (aelf.is_event) = true;
-    RegistrationRecordList registration_record_list = 1;
+    aelf.Hash dapp_id = 1;
+    string domain = 2;
+    aelf.Address registrant = 3;
 }
 
-// services
-message SetServicesEarningRulesInput {
-    string service = 1;
-    EarningRuleList services_earning_rules = 2;
+message DappInfo {
+    aelf.Address dapp_admin = 1;
+    string official_domain = 2;
+    PointsRuleList dapps_earning_rules = 3;
+}
+
+message PointsRuleList {
+    repeated PointsRule earning_rules = 1;
+}
+
+message PointsRule {
+    string action_name = 1;
+    string point_name = 2;
+    int64 user_points = 3; 
+    int64 kol_points = 4; 
+    int64 inviter_points = 5; 
+}
+
+enum IncomeSourceType {
+    USER = 0;
+    KOL = 1;
+    INVITER = 2;
+}
+
+message PointsUpdated {
+    option (aelf.is_event) = true;
+    PointsStateList point_state_list = 1;
+}
+message PointsStateList {
+    repeated PointsState point_states = 1;
+}
+
+message PointsState {
+    aelf.Address address = 1;
+    string domain = 2;
+    IncomeSourceType income_source_type = 3;
+    string point_name = 4;
+    int64 balance = 5;
+}
+
+message SettleInput {
+    aelf.Address user_address = 1;
+    string action_name = 2;
+    aelf.Hash dapp_id = 3;
+}
+
+message GetPointsBalanceInput {
+    aelf.Hash dapp_id = 1;
+    aelf.Address address = 2;
+    string domain = 3;
+    IncomeSourceType income_source_type = 4;
+    string point_name = 5;
+}
+
+message GetPointsBalanceOutput {
+    string point_name = 1;
+    aelf.Address owner = 2;
+    int64 balance = 3;
+    google.protobuf.Timestamp last_update_time = 4;
+}
+
+message SetDappInformationInput {
+    aelf.Address dapp_admin = 1;
+    string dapp_name = 2; 
+    string official_domain = 3;
+    PointsRuleList dapps_earning_rules = 4;
+}
+
+message DappInformationChanged {
+    option (aelf.is_event) = true;
+    aelf.Hash dapp_id = 1; 
+    DappInfo dapp_info = 2;
+}
+
+message GetDappInformationInput {
+    aelf.Hash dapp_id = 1; 
+}
+
+message GetDappInformationOutput {
+    DappInfo dapp_info = 1;
+}
+
+message SetSelfIncreasingPointsRulesInput {
+    aelf.Hash dapp_id = 1;
+    EarningRule self_increasing_earning_rule = 2;
+}
+
+message SelfIncreasingPointsRulesChanged {
+    option (aelf.is_event) = true;
+    aelf.Hash dapp_id = 1;
+    string point_name = 2;
+    int64 user_points = 3; 
+    int64 kol_points = 4; 
+    int64 inviter_points = 5; 
+}
+
+message GetSelfIncreasingPointsRuleInput {
+    aelf.Hash dapp_id = 1;
+}
+message GetSelfIncreasingPointsRuleOutput {
+    EarningRule rule = 1;
+}
+
+message ApplyToOperatorInput {
+    string domain = 1;
+    aelf.Hash dapp_id = 2;
+    aelf.Address invitee = 3;
+}
+
+message InviterApplied {
+    option (aelf.is_event) = true;
+    string domain = 1;
+    aelf.Hash dapp_id = 2;
+    aelf.Address invitee = 3;
+    aelf.Address inviter = 4;
 }
 
 message ServicesEarningRulesChanged {
     option (aelf.is_event) = true;
     string service = 1;
     EarningRuleList services_earning_rules = 2;
-}
-
-message GetServicesEarningRulesInput {
-    string service = 1;
-}
-
-message GetServicesEarningRulesOutput {
-    aelf.Address Admin = 1;
-    EarningRuleList service_earning_rules = 2;
 }
 
 message EarningRuleList {
@@ -141,34 +221,9 @@ message PointCreated {
     int32 decimals = 2;
 }
 
-message ApplyToOperatorInput {
-    string domain = 1;
-    string service = 2;
-    aelf.Address invitee = 3;
-}
-message PointsSettlementInput {
-    repeated PointsRecord points_records = 1;
-}
 message PointsRecord {
     aelf.Address pointer_address = 1;
     string points_name = 2;
     int64 amout = 3;
     string dapp_name = 4;
-}
-
-message PointsRecordList {
-  repeated PointsRecord points_records = 1;
-}
-// Log Event
-message InviterApplyed {
-    option (aelf.is_event) = true;
-    string domain = 1;
-    string service = 2;
-    aelf.Address invitee = 3;
-    aelf.Address inviter = 4;
-}
-
-message PointsRecorded {
-    option (aelf.is_event) = true;
-    PointsRecordList points_record_list = 1;
 }

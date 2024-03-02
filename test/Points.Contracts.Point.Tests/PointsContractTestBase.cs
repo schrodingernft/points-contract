@@ -1,12 +1,13 @@
 using System.IO;
+using AElf;
 using AElf.Boilerplate.TestBase;
-using AElf.Contracts.MultiToken;
 using AElf.ContractTestBase.ContractTestKit;
 using AElf.Cryptography.ECDSA;
 using AElf.Kernel;
 using AElf.Standards.ACS0;
 using AElf.Types;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Volo.Abp.Threading;
 
 namespace Points.Contracts.Point;
@@ -29,6 +30,15 @@ public class PointsContractTestBase : DAppContractTestBase<PointsContractTestMod
     protected Address User3Address => Accounts[3].Address;
 
     protected readonly IBlockTimeProvider BlockTimeProvider;
+
+    protected const string DefaultPointName = "APPLY-0";
+    protected const string DefaultActionName = "apply";
+    protected const string JoinPointName = "JOIN-0";
+    protected const string JoinActionName = "join";
+    protected const string DefaultDappName = "ABC";
+    protected const string DefaultOfficialDomain = "official.com";
+    protected static readonly Hash DefaultDappId = HashHelper.ComputeFrom("ABC");
+    protected static readonly Int32Value DefaultMaxApply = new () { Value = 2 };
 
     protected PointsContractTestBase()
     {

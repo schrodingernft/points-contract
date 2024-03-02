@@ -10,16 +10,9 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
     public override Empty Initialize(InitializeInput input)
     {
         Assert(!State.Initialized.Value, "Already initialized.");
-        Assert(input.MaxRecordListCount > 0, "Invalid MaxRecordListCount.");
-        Assert(input.MaxApplyCount > 0, "Invalid MaxApplyCount.");
-        Assert(input.MaxRegistrationListCount > 0, "Invalid MaxRegistrationListCount.");
-
         State.GenesisContract.Value = Context.GetZeroSmartContractAddress();
         Assert(State.GenesisContract.GetContractAuthor.Call(Context.Self) == Context.Sender, "No permission.");
-
         Assert(input.Admin == null || !input.Admin.Value.IsNullOrEmpty(), "Invalid input admin.");
-        State.MaxRecordListCount.Value = input.MaxRecordListCount;
-        State.MaxApplyCount.Value = input.MaxApplyCount;
         State.Admin.Value = input.Admin ?? Context.Sender;
         State.Initialized.Value = true;
 
@@ -48,26 +41,6 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         return new Empty();
     }
 
-    public override Empty SetMaxRecordListCount(Int32Value input)
-    {
-        AssertInitialized();
-        AssertAdmin();
-        Assert(input is { Value: > 0 }, "Invalid input.");
-
-        State.MaxRecordListCount.Value = input.Value;
-        return new Empty();
-    }
-
-    public override Empty SetMaxRegistrationListCount(Int32Value input)
-    {
-        AssertInitialized();
-        AssertAdmin();
-        Assert(input is { Value: > 0 }, "Invalid input.");
-
-        State.MaxRegistrationListCount.Value = input.Value;
-        return new Empty();
-    }
-
     public override Empty SetMaxApplyCount(Int32Value input)
     {
         AssertInitialized();
@@ -75,59 +48,6 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         Assert(input is { Value: > 0 }, "Invalid input.");
 
         State.MaxApplyCount.Value = input.Value;
-        return new Empty();
-    }
-
-    public override Empty ApplyToOperator(ApplyToOperatorInput input)
-    {
-        Assert(input != null, "Invalid input.");
-        Assert(input.Domain != null, "Invalid domain.");
-        Assert(input.Service != null, "Invalid service name.");
-        Assert(input.Invitee != null, "Invalid invitee.");
-        var registrationInfo = State.ServicesEarningRulesMap[input.Service];
-        Assert(registrationInfo != null, "Service not found.");
-        var domain = State.DomainOperatorRelationshipMap[input.Domain];
-        Assert(domain == null, "Domain has Exist.");
-        var applyCount = State.ApplyCount[Context.Sender][input.Service];
-        Assert(applyCount < State.MaxApplyCount.Value, "Apply count exceed the limit.");
-        State.DomainOperatorRelationshipMap[input.Domain] = new DomainOperatorRelationship
-        {
-            Domain = input.Domain,
-            Invitee = input.Invitee,
-            Inviter = Context.Sender
-        };
-        State.ApplyCount[Context.Sender][input.Service] += 1;
-        Context.Fire(new InviterApplyed
-        {
-            Domain = input.Domain,
-            Service = input.Service,
-            Invitee = input.Invitee,
-            Inviter = Context.Sender
-        });
-        return new Empty();
-    }
-
-    public override Empty PointsSettlement(PointsSettlementInput input)
-    {
-        AssertAdmin();
-        Assert(input != null, "Invalid input.");
-        Assert(input.PointsRecords != null && input.PointsRecords.Count <= State.MaxRecordListCount.Value,
-            "Invalid PointsRecords.");
-        foreach (var pointRecord in input.PointsRecords)
-        {
-            var pointInfo = State.PointsInfos[pointRecord.PointsName];
-            Assert(pointInfo != null, $"invalid PointsName:{pointRecord.PointsName}");
-            State.PointsPool[pointRecord.DappName][pointRecord.PointerAddress][pointRecord.PointsName] +=
-                pointRecord.Amout;
-        }
-
-        Context.Fire(new PointsRecorded
-        {
-            PointsRecordList = new PointsRecordList()
-            {
-                PointsRecords = { input.PointsRecords }
-            }
-        });
         return new Empty();
     }
 

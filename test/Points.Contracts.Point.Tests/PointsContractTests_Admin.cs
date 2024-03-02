@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.Types;
@@ -34,8 +33,6 @@ public partial class PointsContractTests : PointsContractTestBase
         var result = await PointsContractStub.Initialize.SendWithExceptionAsync(new InitializeInput
         {
             Admin = new Address(),
-            MaxRecordListCount = 100,
-            MaxApplyCount = 100
         });
         result.TransactionResult.Error.ShouldContain("Invalid input admin.");
 
@@ -43,8 +40,6 @@ public partial class PointsContractTests : PointsContractTestBase
         result = await PointsContractUserStub.Initialize.SendWithExceptionAsync(new InitializeInput
         {
             Admin = UserAddress,
-            MaxRecordListCount = 100,
-            MaxApplyCount = 100
         });
         result.TransactionResult.Error.ShouldContain("No permission.");
     }
@@ -117,7 +112,7 @@ public partial class PointsContractTests : PointsContractTestBase
 
         var result = await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
         {
-            TokenName = "ABC-1",
+            TokenName = DefaultPointName,
             Decimals = 8
         });
         result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
@@ -151,20 +146,20 @@ public partial class PointsContractTests : PointsContractTestBase
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = "ABC-1",
+            TokenName = DefaultPointName,
             Decimals = -1
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = String.Join("-", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 4))
+            TokenName = string.Join("-", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 4))
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = "ABC-1",
+            TokenName = DefaultPointName,
             Decimals = 19
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
@@ -172,18 +167,46 @@ public partial class PointsContractTests : PointsContractTestBase
         await CreatePoint();
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = "ABC-1",
+            TokenName = DefaultPointName,
             Decimals = 8
         });
         result.TransactionResult.Error.ShouldContain("Point token already exists.");
     }
 
-    private async Task Initialize() => await PointsContractStub.Initialize.SendAsync(new InitializeInput
+    [Fact]
+    public async Task MaxApplyCountTest()
     {
-        MaxRecordListCount = 100,
-        MaxApplyCount = 300
-    });
+        await Initialize();
+
+        await SetMaxApplyCount();
+        var getResult = await PointsContractStub.GetMaxApplyCount.CallAsync(new Empty());
+        getResult.ShouldBe(DefaultMaxApply);
+    }
+
+    [Fact]
+    public async Task MaxApplyCountTest_Fail()
+    {
+        var result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(DefaultMaxApply);
+        result.TransactionResult.Error.ShouldContain("Not initialized.");
+
+        await Initialize();
+
+        result = await PointsContractUserStub.SetMaxApplyCount.SendWithExceptionAsync(DefaultMaxApply);
+        result.TransactionResult.Error.ShouldContain("No permission.");
+
+        var errorMaxApply = new Int32Value { Value = -1 };
+        result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(errorMaxApply);
+        result.TransactionResult.Error.ShouldContain("Invalid input.");
+    }
+
+    private async Task SetMaxApplyCount() => await PointsContractStub.SetMaxApplyCount.SendAsync(DefaultMaxApply);
+    private async Task Initialize() => await PointsContractStub.Initialize.SendAsync(new InitializeInput());
 
     private async Task CreatePoint()
-        => await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput { TokenName = "ABC-1", Decimals = 8 });
+    {
+        await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
+            { TokenName = DefaultPointName, Decimals = 8 });
+        await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
+            { TokenName = JoinPointName, Decimals = 8 });
+    }
 }
