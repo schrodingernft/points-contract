@@ -92,6 +92,25 @@ message PointsState {
     int64 balance = 5;
 }
 
+message PointsDetails {
+    option (aelf.is_event) = true;
+    PointsDetailList point_detail_list = 1;
+}
+
+message PointsDetailList {
+    repeated PointsDetail points_details = 1;
+}
+
+message PointsDetail {
+    aelf.Address pointer_address = 1;
+    string domain = 2;
+    string action_name = 3;
+    IncomeSourceType income_source_type = 4;
+    string points_name = 5;  
+    int64 amount = 6;
+    aelf.Hash dapp_id = 7;
+}
+
 message SettleInput {
     aelf.Address user_address = 1;
     string action_name = 2;

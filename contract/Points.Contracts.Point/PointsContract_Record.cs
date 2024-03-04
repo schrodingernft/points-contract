@@ -126,10 +126,12 @@ public partial class PointsContract
         var pointName = rule.PointName;
         var domain = State.RegistrationMap[dappId][user];
         var pointsUpdated = new PointsUpdated { PointStateList = new PointsStateList() };
-
+        var pointsDetails = new PointsDetails { PointDetailList = new PointsDetailList() };
         UpdatePointsPool(user, domain, IncomeSourceType.User, pointName, rule.UserPoints);
         pointsUpdated.PointStateList.PointStates.Add(GeneratePointsState(user, domain,
             IncomeSourceType.User, pointName));
+        pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
+            IncomeSourceType.User, pointName, rule.UserPoints, dappId));
 
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
@@ -139,6 +141,8 @@ public partial class PointsContract
             UpdatePointsPool(invitee, domain, IncomeSourceType.Kol, pointName, rule.KolPoints);
             pointsUpdated.PointStateList.PointStates.Add(GeneratePointsState(invitee, domain,
                 IncomeSourceType.Kol, pointName));
+            pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
+                IncomeSourceType.Kol, pointName, rule.KolPoints, dappId));
 
             var inviter = domainRelationship.Inviter;
             if (inviter != null)
@@ -146,10 +150,15 @@ public partial class PointsContract
                 UpdatePointsPool(inviter, domain, IncomeSourceType.Inviter, pointName, rule.InviterPoints);
                 pointsUpdated.PointStateList.PointStates.Add(GeneratePointsState(inviter, domain,
                     IncomeSourceType.Inviter, pointName));
+                pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
+                    IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
             }
         }
 
+        // Account total
         Context.Fire(pointsUpdated);
+        // Points details
+        Context.Fire(pointsDetails);
     }
 
     private void SettlingSelfIncreasingPoints(Hash dappId, Address user)
@@ -236,6 +245,21 @@ public partial class PointsContract
             IncomeSourceType = type,
             PointName = pointName,
             Balance = State.PointsPool[address][domain][type][pointName]
+        };
+    }
+
+    private PointsDetail GeneratePointsDetail(Address address, string domain, string actionName, IncomeSourceType type,
+        string pointName, long amount, Hash dappId)
+    {
+        return new PointsDetail
+        {
+            PointerAddress = address,
+            Domain = domain,
+            ActionName = actionName,
+            IncomeSourceType = type,
+            PointsName = pointName,
+            Amount = amount,
+            DappId = dappId
         };
     }
 }
