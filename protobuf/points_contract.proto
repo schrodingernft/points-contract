@@ -102,13 +102,14 @@ message PointsDetailList {
 }
 
 message PointsDetail {
-    aelf.Address pointer_address = 1;
-    string domain = 2;
-    string action_name = 3;
-    IncomeSourceType income_source_type = 4;
-    string points_name = 5;  
-    int64 amount = 6;
-    aelf.Hash dapp_id = 7;
+    aelf.Hash dapp_id = 1;
+    aelf.Address pointer_address = 2;
+    IncomeSourceType income_source_type = 3;
+    string domain = 4;
+    string action_name = 5;
+    string points_name = 6;  
+    int64 increase_amount = 7;
+    int64 balance = 8;
 }
 
 message SettleInput {
