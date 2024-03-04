@@ -1,3 +1,4 @@
+using System.Linq;
 using AElf;
 using AElf.Sdk.CSharp;
 using AElf.Types;
@@ -36,7 +37,8 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         AssertAdmin();
         Assert(input.ReservedDomainList?.Domains?.Count > 0, "Invalid reserved domain list count.");
 
-        State.ReservedDomains.Value = input.ReservedDomainList;
+        var domains = input.ReservedDomainList.Domains.Distinct();
+        State.ReservedDomains.Value = new ReservedDomainList { Domains = { domains } };
 
         return new Empty();
     }
