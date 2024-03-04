@@ -35,7 +35,7 @@ public class PointsContractTestBase : DAppContractTestBase<PointsContractTestMod
     protected const string DefaultActionName = "apply";
     protected const string JoinPointName = "JOIN-0";
     protected const string JoinActionName = "join";
-    protected const string DefaultDappName = "ABC";
+    // protected const string DefaultDappName = "ABC";
     protected const string DefaultOfficialDomain = "official.com";
     protected static readonly Hash DefaultDappId = HashHelper.ComputeFrom("ABC");
     protected static readonly Int32Value DefaultMaxApply = new () { Value = 2 };

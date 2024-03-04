@@ -18,7 +18,7 @@ public partial class PointsContractTests
 
         var getResult = await PointsContractStub.GetDappInformation.CallAsync(new GetDappInformationInput
         {
-            DappId = HashHelper.ComputeFrom(DefaultDappName)
+            DappId = DefaultDappId
         });
         getResult.DappInfo.DappAdmin.ShouldBe(DefaultAddress);
         getResult.DappInfo.OfficialDomain.ShouldBe(DefaultOfficialDomain);
@@ -39,7 +39,7 @@ public partial class PointsContractTests
         var input = new SetDappInformationInput
         {
             DappAdmin = DefaultAddress,
-            DappName = DefaultDappName,
+            DappId = DefaultDappId,
             OfficialDomain = DefaultOfficialDomain,
             DappsEarningRules = new PointsRuleList()
         };
@@ -58,11 +58,11 @@ public partial class PointsContractTests
         result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
         input.DappAdmin = DefaultAddress;
-        input.DappName = "";
+        input.DappId = Hash.Empty;
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
-        input.DappName = DefaultDappName;
+        input.DappId = DefaultDappId;
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
@@ -160,7 +160,7 @@ public partial class PointsContractTests
         var getResult = await PointsContractStub.GetSelfIncreasingPointsRule.CallAsync(
             new GetSelfIncreasingPointsRuleInput
             {
-                DappId = HashHelper.ComputeFrom(DefaultDappName)
+                DappId = DefaultDappId
             });
         getResult.Rule.PointName.ShouldBe(JoinPointName);
         getResult.Rule.UserPoints.ShouldBe(10000000);
@@ -295,7 +295,7 @@ public partial class PointsContractTests
         await PointsContractStub.SetDappInformation.SendAsync(new SetDappInformationInput
         {
             DappAdmin = DefaultAddress,
-            DappName = DefaultDappName,
+            DappId = DefaultDappId,
             OfficialDomain = DefaultOfficialDomain,
             DappsEarningRules = new PointsRuleList
             {

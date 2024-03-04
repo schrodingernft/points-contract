@@ -11,7 +11,7 @@ public partial class PointsContract
         AssertInitialized();
         AssertAdmin();
         AssertDomainFormat(input.OfficialDomain);
-        Assert(input.DappAdmin.Value != null && !string.IsNullOrEmpty(input.DappName) &&
+        Assert(input.DappAdmin.Value != null && input.DappId != null &&
                input.DappsEarningRules?.EarningRules?.Count > 0, "Invalid earning rules.");
 
         foreach (var rule in input.DappsEarningRules.EarningRules)
@@ -29,12 +29,11 @@ public partial class PointsContract
             OfficialDomain = input.OfficialDomain,
             DappsEarningRules = input.DappsEarningRules
         };
-        var dappId = HashHelper.ComputeFrom(input.DappName);
-        State.DappInfos[dappId] = dappInfo;
+        State.DappInfos[input.DappId] = dappInfo;
 
         Context.Fire(new DappInformationChanged
         {
-            DappId = dappId,
+            DappId = input.DappId,
             DappInfo = dappInfo
         });
 

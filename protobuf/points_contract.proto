@@ -134,7 +134,7 @@ message GetPointsBalanceOutput {
 
 message SetDappInformationInput {
     aelf.Address dapp_admin = 1;
-    string dapp_name = 2; 
+    aelf.Hash dapp_id = 2; 
     string official_domain = 3;
     PointsRuleList dapps_earning_rules = 4;
 }

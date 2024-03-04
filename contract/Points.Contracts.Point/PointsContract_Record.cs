@@ -22,9 +22,7 @@ public partial class PointsContract
         Assert(string.IsNullOrEmpty(State.RegistrationMap[dappId][registrant]),
             "Users cannot bind two domains on the same Dapp.");
         State.RegistrationMap[dappId][registrant] = domain;
-
-        SettlingPoints(dappId, input.Registrant, "join");
-
+        
         // The user registered using an unofficial domain link.
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
@@ -36,6 +34,7 @@ public partial class PointsContract
             if (relationship.Inviter != null) State.InviterRelationships[dappId][relationship.Inviter] += 1;
         }
 
+        SettlingPoints(dappId, input.Registrant, "join");
         // init first join time
         State.LastBillingUpdateTimes[dappId][registrant][IncomeSourceType.User] = Context.CurrentBlockTime;
 
