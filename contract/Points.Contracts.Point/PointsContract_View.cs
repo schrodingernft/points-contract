@@ -1,4 +1,5 @@
 using System;
+using AElf.CSharp.Core;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
@@ -53,7 +54,7 @@ public partial class PointsContract
         {
             PointName = input.PointName,
             Owner = input.Address,
-            Balance = increasingPoints + balance,
+            Balance = increasingPoints.Add(balance),
             LastUpdateTime = userLastBillingUpdateTimes
         };
     }
