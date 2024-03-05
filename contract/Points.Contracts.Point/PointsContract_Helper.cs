@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AElf.Types;
 
 namespace Points.Contracts.Point;
@@ -21,7 +23,9 @@ public partial class PointsContract
 
     private void AssertDomainFormat(string domain)
     {
-        // todo: add domain protocol format
-        Assert(domain.Length is > 0 and <= PointsContractConstants.DomainNameLength, "Invalid domain.");
+        var invalidChars = new List<char> { '<', '>', ':', '"', '/', '|', '?', '*' }; // 定义非法字符
+        Assert(domain.Length is > 0 and <= PointsContractConstants.DomainNameLength &&
+               !(domain.StartsWith(".") || domain.EndsWith(".")) &&
+               !domain.Any(c => invalidChars.Contains(c) || c > 126 || char.IsUpper(c)), "Invalid domain.");
     }
 }

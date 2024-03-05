@@ -90,6 +90,46 @@ public partial class PointsContractTests
 
         result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
+            Domain = "ABC.com",
+            DappId = dappId,
+            Invitee = UserAddress
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid domain.");
+        
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
+            Domain = ".abc.com",
+            DappId = dappId,
+            Invitee = UserAddress
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid domain.");
+
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
+            Domain = "abc.com.",
+            DappId = dappId,
+            Invitee = UserAddress
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid domain.");
+
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
+            Domain = "€.com",
+            DappId = dappId,
+            Invitee = UserAddress
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid domain.");
+        
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
+            Domain = "*.com",
+            DappId = dappId,
+            Invitee = UserAddress
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid domain.");
+
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
             DappId = dappId,
             Invitee = UserAddress
         });
