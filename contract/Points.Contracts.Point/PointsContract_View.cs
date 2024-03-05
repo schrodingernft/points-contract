@@ -12,8 +12,7 @@ public partial class PointsContract
     public override GetReservedDomainListOutput GetReservedDomainList(Empty input)
         => new() { ReservedDomainList = State.ReservedDomains.Value };
 
-    public override DomainOperatorRelationship GetDomainApplyInfo(StringValue domain)
-        => State.DomainsMap[domain.Value];
+    public override DomainRelationshipInfo GetDomainApplyInfo(StringValue domain) => State.DomainsMap[domain.Value];
 
     public override GetPointsBalanceOutput GetPointsBalance(GetPointsBalanceInput input)
     {

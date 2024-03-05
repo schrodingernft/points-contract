@@ -22,7 +22,6 @@ public partial class PointsContract
     private void AssertDomainFormat(string domain)
     {
         // todo: add domain protocol format
-        // 格式校验，特殊字符，中文
         Assert(domain.Length is > 0 and <= PointsContractConstants.DomainNameLength, "Invalid domain.");
     }
 }

@@ -1,7 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
+using AElf.Kernel.Blockchain.Application;
 using AElf.Types;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 
@@ -10,57 +12,56 @@ namespace Points.Contracts.Point;
 public partial class PointsContractTests
 {
     [Fact]
-    public async Task SetDappInformationTests()
+    public async Task AddDappTests()
     {
         await Initialize();
-        await CreatePoint();
-        await SetDappInformation();
+        var dappId = await AddDapp();
 
         var getResult = await PointsContractStub.GetDappInformation.CallAsync(new GetDappInformationInput
         {
-            DappId = DefaultDappId
+            DappId = dappId
         });
         getResult.DappInfo.DappAdmin.ShouldBe(DefaultAddress);
         getResult.DappInfo.OfficialDomain.ShouldBe(DefaultOfficialDomain);
-        getResult.DappInfo.DappsPointRules.PointsRules.Count.ShouldBe(2);
+        // getResult.DappInfo.DappsPointRules.PointsRules.Count.ShouldBe(2);
     }
 
     [Fact]
-    public async Task SetDappInformationTests_Fail()
+    public async Task AddDappTests_Fail()
     {
-        var result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(new SetDappInformationInput());
+        var result = await PointsContractStub.AddDapp.SendWithExceptionAsync(new AddDappInput());
         result.TransactionResult.Error.ShouldContain("Not initialized.");
 
         await Initialize();
 
-        result = await PointsContractUserStub.SetDappInformation.SendWithExceptionAsync(new SetDappInformationInput());
+        result = await PointsContractUserStub.AddDapp.SendWithExceptionAsync(new AddDappInput());
         result.TransactionResult.Error.ShouldContain("No permission.");
 
-        var input = new SetDappInformationInput
+        var input = new AddDappInput
         {
             DappAdmin = DefaultAddress,
             OfficialDomain = DefaultOfficialDomain,
         };
 
         input.OfficialDomain = "";
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
+        result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
 
         input.OfficialDomain = string.Join(".", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 10));
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
+        result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
 
-        input.OfficialDomain = DefaultOfficialDomain;
-        input.DappAdmin = new Address();
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
-
-        input.DappAdmin = DefaultAddress;
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
-
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
+        // input.OfficialDomain = DefaultOfficialDomain;
+        // input.DappAdmin = new Address();
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
+        //
+        // input.DappAdmin = DefaultAddress;
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
+        //
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
         // {
@@ -70,8 +71,8 @@ public partial class PointsContractTests
         //     KolPoints = 1000000,
         //     InviterPoints = 100000
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Wrong points name input.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Wrong points name input.");
 
         // input.DappsEarningRules = new PointsRuleList();
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
@@ -82,10 +83,10 @@ public partial class PointsContractTests
         //     KolPoints = 1000000,
         //     InviterPoints = 100000
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Wrong points name input.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Wrong points name input.");
 
-        await CreatePoint();
+        // await CreatePoint();
         // input.DappsEarningRules = new PointsRuleList();
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
         // {
@@ -95,8 +96,8 @@ public partial class PointsContractTests
         //     KolPoints = 1000000,
         //     InviterPoints = 100000
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("ActionName cannot be empty.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("ActionName cannot be empty.");
 
         // input.DappsEarningRules = new PointsRuleList();
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
@@ -107,8 +108,8 @@ public partial class PointsContractTests
         //     KolPoints = 1000000,
         //     InviterPoints = 100000
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
 
         // input.DappsEarningRules = new PointsRuleList();
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
@@ -119,8 +120,8 @@ public partial class PointsContractTests
         //     KolPoints = -1,
         //     InviterPoints = 100000
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
 
         // input.DappsEarningRules = new PointsRuleList();
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
@@ -131,9 +132,9 @@ public partial class PointsContractTests
         //     KolPoints = 1000000,
         //     InviterPoints = -1
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-
-        result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        //
+        // result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
         // input.DappsEarningRules = new PointsRuleList();
         // input.DappsEarningRules.EarningRules.Add(new PointsRule
         // {
@@ -142,21 +143,22 @@ public partial class PointsContractTests
         //     UserPoints = 10000000,
         //     KolPoints = 1000000,
         // });
-        result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
-        result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
+        // result = await PointsContractStub.AddDapp.SendWithExceptionAsync(input);
+        // result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
     }
 
     [Fact]
     public async Task SetSelfIncreasingPointsRulesTests()
     {
         await Initialize();
-        await CreatePoint();
-        await SetSelfIncreasingPointsRules();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
 
         var getResult = await PointsContractStub.GetSelfIncreasingPointsRule.CallAsync(
             new GetSelfIncreasingPointsRuleInput
             {
-                DappId = DefaultDappId
+                DappId = dappId
             });
         getResult.Rule.PointName.ShouldBe(SelfIncreasingPointName);
         getResult.Rule.UserPoints.ShouldBe(10000000);
@@ -213,7 +215,7 @@ public partial class PointsContractTests
             });
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
 
-        await CreatePoint();
+        // await CreatePoint();
 
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
@@ -271,7 +273,7 @@ public partial class PointsContractTests
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
     }
 
-    private async Task SetSelfIncreasingPointsRules()
+    private async Task SetSelfIncreasingPointsRules(Hash dappId)
     {
         await PointsContractStub.SetSelfIncreasingPointsRules.SendAsync(new SetSelfIncreasingPointsRulesInput
         {
@@ -286,34 +288,18 @@ public partial class PointsContractTests
         });
     }
 
-    private async Task SetDappInformation()
+    private async Task<Hash> AddDapp()
     {
-        await PointsContractStub.SetDappInformation.SendAsync(new SetDappInformationInput
+        var input = new AddDappInput
         {
             DappAdmin = DefaultAddress,
             OfficialDomain = DefaultOfficialDomain,
-            // DappsEarningRules = new PointsRuleList
-            // {
-            //     EarningRules =
-            //     {
-            //         new PointsRule
-            //         {
-            //             ActionName = DefaultActionName,
-            //             PointName = DefaultPointName,
-            //             UserPoints = 10000000,
-            //             KolPoints = 1000000,
-            //             InviterPoints = 100000
-            //         },
-            //         new PointsRule
-            //         {
-            //             ActionName = JoinActionName,
-            //             PointName = JoinPointName,
-            //             UserPoints = 20000000,
-            //             KolPoints = 2000000,
-            //             InviterPoints = 200000
-            //         }
-            //     }
-            // }
-        });
+        };
+        var result = await PointsContractStub.AddDapp.SendAsync(input);
+        var blockchainService = Application.ServiceProvider.GetRequiredService<IBlockchainService>();
+        var previousBlockHash = (await blockchainService.GetBlockByHashAsync(result.TransactionResult.BlockHash)).Header
+            .PreviousBlockHash;
+        return HashHelper.ConcatAndCompute(previousBlockHash, result.TransactionResult.TransactionId,
+            HashHelper.ComputeFrom(input));
     }
 }

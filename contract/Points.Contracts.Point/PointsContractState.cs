@@ -11,7 +11,7 @@ public partial class PointsContractState : ContractState
     public SingletonState<ReservedDomainList> ReservedDomains { get; set; }
     public SingletonState<int> MaxApplyCount { get; set; }
     public MappedState<Hash, Address, string> RegistrationMap { get; set; }
-    public MappedState<string, DomainOperatorRelationship> DomainsMap { get; set; }
+    public MappedState<string, DomainRelationshipInfo> DomainsMap { get; set; }
     public MappedState<Hash, DappInfo> DappInfos { get; set; }
     public MappedState<Address, Hash, int> ApplyDomainCount { get; set; }
     public MappedState<Hash, PointsRule> SelfIncreasingPointsRules { get; set; }

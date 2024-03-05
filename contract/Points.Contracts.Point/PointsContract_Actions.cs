@@ -42,7 +42,7 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         return new Empty();
     }
 
-    public override Empty SetApplyDomainMaxCount(Int32Value input)
+    public override Empty SetMaxApplyDomainCount(Int32Value input)
     {
         AssertInitialized();
         AssertAdmin();

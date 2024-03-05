@@ -92,7 +92,7 @@ public partial class PointsContract
         Assert(State.DomainsMap[domain] == null, "Domain has Exist.");
         Assert(string.IsNullOrEmpty(State.ReservedDomains?.Value?.Domains.FirstOrDefault(t => t == domain)),
             "This domain name is an officially reserved domain name");
-        State.DomainsMap[domain] = new DomainOperatorRelationship
+        State.DomainsMap[domain] = new DomainRelationshipInfo
         {
             Domain = domain,
             Invitee = invitee,

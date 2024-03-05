@@ -108,9 +108,10 @@ public partial class PointsContractTests : PointsContractTestBase
     public async Task CreatePointTests()
     {
         await Initialize();
-
+        var dappId = await AddDapp();
         var result = await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
         {
+            DappId = dappId,
             PointsName = DefaultPointName,
             Decimals = 8
         });
@@ -128,23 +129,31 @@ public partial class PointsContractTests : PointsContractTestBase
         result = await PointsContractUserStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput());
         result.TransactionResult.Error.ShouldContain("No permission.");
 
-        result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput());
+        var dappId = await AddDapp();
+
+        result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
+        {
+            DappId = dappId
+        });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
+            DappId = dappId,
             PointsName = ""
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
+            DappId = dappId,
             Decimals = 8
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
+            DappId = dappId,
             PointsName = DefaultPointName,
             Decimals = -1
         });
@@ -152,20 +161,23 @@ public partial class PointsContractTests : PointsContractTestBase
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
+            DappId = dappId,
             PointsName = string.Join("-", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 4))
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
+            DappId = dappId,
             PointsName = DefaultPointName,
             Decimals = 19
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
-        await CreatePoint();
+        await CreatePoint(dappId);
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
+            DappId = dappId,
             PointsName = DefaultPointName,
             Decimals = 8
         });
@@ -205,13 +217,13 @@ public partial class PointsContractTests : PointsContractTestBase
     private async Task SetMaxApplyCount() => await PointsContractStub.SetApplyDomainMaxCount.SendAsync(DefaultMaxApply);
     private async Task Initialize() => await PointsContractStub.Initialize.SendAsync(new InitializeInput());
 
-    private async Task CreatePoint()
+    private async Task CreatePoint(Hash dappId)
     {
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
-            { PointsName = DefaultPointName, Decimals = 8 });
+            { DappId = dappId, PointsName = DefaultPointName, Decimals = 8 });
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
-            { PointsName = JoinPointName, Decimals = 8 });
+            { DappId = dappId, PointsName = JoinPointName, Decimals = 8 });
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
-            { PointsName = SelfIncreasingPointName, Decimals = 8 });
+            { DappId = dappId, PointsName = SelfIncreasingPointName, Decimals = 8 });
     }
 }

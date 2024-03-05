@@ -15,9 +15,9 @@ public partial class PointsContractTests
     public async Task ApplyToBeAdvocateTests()
     {
         await Initialize();
-        await CreatePoint();
-        await SetDappInformation();
-        await SetSelfIncreasingPointsRules();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
         await SetMaxApplyCount();
 
         const string domain = "user.com";
@@ -75,8 +75,8 @@ public partial class PointsContractTests
     public async Task ApplyToBeAdvocateTests_Fail()
     {
         await Initialize();
-        await CreatePoint();
-        await SetDappInformation();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
         await SetMaxApplyCount();
 
         const string domain = "example.com";
@@ -148,9 +148,9 @@ public partial class PointsContractTests
     public async Task JoinTests()
     {
         await Initialize();
-        await CreatePoint();
-        await SetDappInformation();
-        await SetSelfIncreasingPointsRules();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
         await SetMaxApplyCount();
 
         var currentBlockTime = BlockTimeProvider.GetBlockTime();
@@ -274,9 +274,9 @@ public partial class PointsContractTests
     public async Task JoinTests_Fail()
     {
         await Initialize();
-        await CreatePoint();
-        await SetDappInformation();
-        await SetSelfIncreasingPointsRules();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
         await SetMaxApplyCount();
 
         // not dapp admin

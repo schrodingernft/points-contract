@@ -20,19 +20,19 @@ service PointsContract {
   rpc SetReservedDomainList(SetReservedDomainListInput) returns (google.protobuf.Empty){}
   rpc GetReservedDomainList(google.protobuf.Empty) returns (GetReservedDomainListOutput){option (aelf.is_view) = true;}
   rpc CreatePoint(CreatePointInput) returns (google.protobuf.Empty) {}
-  rpc SetApplyDomainMaxCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
+  rpc SetMaxApplyDomainCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
   
   rpc Join(JoinInput) returns (google.protobuf.Empty) {}
   // rpc Settle(SettleInput) returns (google.protobuf.Empty) {}
   rpc GetPointsBalance(GetPointsBalanceInput) returns (GetPointsBalanceOutput) { option (aelf.is_view) = true; }
-  rpc SetDappInformation(SetDappInformationInput) returns (google.protobuf.Empty) {}
+  // rpc SetDappInformation(SetDappInformationInput) returns (google.protobuf.Empty) {}
   rpc AddDapp(AddDappInput) returns (google.protobuf.Empty) {}
   rpc GetDappInformation(GetDappInformationInput) returns (GetDappInformationOutput) { option (aelf.is_view) = true; }
   rpc SetDappPointsRules(SetDappPointsRulesInput) returns (google.protobuf.Empty) {}
   rpc SetSelfIncreasingPointsRules(SetSelfIncreasingPointsRulesInput) returns (google.protobuf.Empty) {}
   rpc GetSelfIncreasingPointsRule(GetSelfIncreasingPointsRuleInput) returns (GetSelfIncreasingPointsRuleOutput) { option (aelf.is_view) = true; }
   rpc ApplyToBeAdvocate(ApplyToBeAdvocateInput) returns (google.protobuf.Empty) {}
-  rpc GetDomainApplyInfo(google.protobuf.StringValue) returns (DomainOperatorRelationship){option (aelf.is_view) = true;}
+  rpc GetDomainApplyInfo(google.protobuf.StringValue) returns (DomainRelationshipInfo){option (aelf.is_view) = true;}
   rpc GetMaxApplyCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
 }
 
@@ -226,7 +226,7 @@ message ReservedDomainList {
     repeated string domains = 1;
 }
 
-message DomainOperatorRelationship {
+message DomainRelationshipInfo {
     string domain = 1;
     aelf.Address invitee = 2; 
     aelf.Address inviter = 3; 
