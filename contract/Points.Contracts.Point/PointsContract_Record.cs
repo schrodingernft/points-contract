@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
@@ -12,7 +13,7 @@ public partial class PointsContract
     {
         AssertInitialized();
         var dappId = input.DappId;
-        AssertDappAdmin(dappId);
+        AssertDappContractAddress(dappId);
 
         var registrant = input.Registrant;
         Assert(registrant != null, "Invalid registrant address.");
@@ -24,21 +25,30 @@ public partial class PointsContract
         State.RegistrationMap[dappId][registrant] = domain;
 
         // The user registered using an unofficial domain link.
+
+        var relationship = State.DomainsMap[domain];
+        Assert(domain == State.DappInfos[dappId].OfficialDomain || relationship != null, "Not exist domain.");
+        SettlingPoints(dappId, registrant, nameof(Join));
+
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
-            var relationship = State.DomainOperatorRelationshipMap[domain];
-            Assert(relationship != null, "Not exist domain.");
             // All points actions will be settled by self-increasing points.
-            SettlingSelfIncreasingPoints(dappId, registrant);
+            // SettlingSelfIncreasingPoints(dappId, registrant);
 
             // The number of user will only be calculated during the registration process
-            State.Relationships[dappId][relationship.Invitee][domain] += 1;
-            if (relationship.Inviter != null) State.InviterRelationships[dappId][relationship.Inviter] += 1;
+            // TODO 理清domain
+            var invitee = relationship.Invitee;
+            State.InvitationCount[dappId][invitee][domain] = State.InvitationCount[dappId][invitee][domain].Add(1);
+            var inviter = relationship.Inviter;
+            if (inviter != null)
+            {
+                State.TierTwoInvitationCount[dappId][inviter] = State.TierTwoInvitationCount[dappId][inviter].Add(1);
+            }
         }
 
-        SettlingPoints(dappId, registrant, "join");
+        SettlingPoints(dappId, registrant, nameof(Join));
         // init first join time
-        State.LastBillingUpdateTimes[dappId][registrant][IncomeSourceType.User] = Context.CurrentBlockTime;
+        State.LastPointsUpdateTimes[dappId][registrant][IncomeSourceType.User] = Context.CurrentBlockTime;
 
         Context.Fire(new Joined
         {
@@ -50,6 +60,7 @@ public partial class PointsContract
         return new Empty();
     }
 
+    // todo 删除
     // public override Empty Settle(SettleInput input)
     // {
     //     AssertInitialized();
@@ -66,46 +77,48 @@ public partial class PointsContract
     //     return new Empty();
     // }
 
-    public override Empty ApplyToOperator(ApplyToOperatorInput input)
+    public override Empty ApplyToBeAdvocate(ApplyToBeAdvocateInput input)
     {
-        var dappId = input.DappId;
-        Assert(dappId != null && State.DappInfos[dappId] != null, "Invalid dapp id.");
-
         var invitee = input.Invitee;
         var inviter = Context.Sender;
         Assert(invitee != null, "Invalid invitee.");
-        Assert(State.ApplyCount[inviter]?[dappId] < State.MaxApplyCount.Value, "Apply count exceed the limit.");
+
+        var dappId = input.DappId;
+        Assert(dappId != null && State.DappInfos[dappId] != null, "Invalid dapp id.");
+        Assert(State.ApplyDomainCount[inviter]?[dappId] < State.MaxApplyCount.Value, "Apply count exceed the limit.");
 
         var domain = input.Domain;
         AssertDomainFormat(domain);
-        Assert(State.DomainOperatorRelationshipMap[domain] == null, "Domain has Exist.");
+        Assert(State.DomainsMap[domain] == null, "Domain has Exist.");
         Assert(string.IsNullOrEmpty(State.ReservedDomains?.Value?.Domains.FirstOrDefault(t => t == domain)),
             "This domain name is an officially reserved domain name");
-        State.DomainOperatorRelationshipMap[domain] = new DomainOperatorRelationship
+        State.DomainsMap[domain] = new DomainOperatorRelationship
         {
             Domain = domain,
             Invitee = invitee,
             Inviter = inviter != invitee ? inviter : null
         };
 
-        var rule = State.DappInfos[dappId].DappsEarningRules.EarningRules
-            .FirstOrDefault(t => t.ActionName == "apply");
+        const string actionName = "Apply";
+        var rule = State.DappInfos[dappId].DappsPointRules.PointsRules
+            .FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for apply.");
         var pointName = rule.PointName;
         UpdatePointsPool(invitee, domain, IncomeSourceType.Kol, rule.PointName, rule.KolPoints);
 
-        var pointsDetails = new PointsDetails { PointDetailList = new PointsDetailList() };
-        pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(invitee, domain, "apply",
+        var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
+        pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
             IncomeSourceType.Kol, pointName, rule.KolPoints, dappId));
 
-        if (inviter != input.Invitee)
+        if (inviter != invitee)
         {
             UpdatePointsPool(inviter, domain, IncomeSourceType.Inviter, rule.PointName, rule.InviterPoints);
-            pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(inviter, domain, "apply",
+            pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
                 IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
         }
 
-        State.ApplyCount[Context.Sender][input.DappId] += 1;
+        State.ApplyDomainCount[Context.Sender][input.DappId] =
+            State.ApplyDomainCount[Context.Sender][input.DappId].Add(1);
         Context.Fire(new InviterApplied
         {
             Domain = input.Domain,
@@ -118,86 +131,86 @@ public partial class PointsContract
 
     private void SettlingPoints(Hash dappId, Address user, string actionName)
     {
-        // Calculate instantaneous integral action.
-        var pointsRules = State.DappInfos[dappId].DappsEarningRules;
-        var rule = pointsRules.EarningRules.FirstOrDefault(t => t.ActionName == actionName);
+        var pointsRules = State.DappInfos[dappId].DappsPointRules;
+        var rule = pointsRules.PointsRules.FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for this action.");
 
         var pointName = rule.PointName;
         var domain = State.RegistrationMap[dappId][user];
-        var pointsDetails = new PointsDetails { PointDetailList = new PointsDetailList() };
+        var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
         UpdatePointsPool(user, domain, IncomeSourceType.User, pointName, rule.UserPoints);
-        pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
+        pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
             IncomeSourceType.User, pointName, rule.UserPoints, dappId));
 
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
-            var domainRelationship = State.DomainOperatorRelationshipMap[domain];
+            var domainRelationship = State.DomainsMap[domain];
             var invitee = domainRelationship.Invitee;
 
             UpdatePointsPool(invitee, domain, IncomeSourceType.Kol, pointName, rule.KolPoints);
-            pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
+            pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
                 IncomeSourceType.Kol, pointName, rule.KolPoints, dappId));
 
             var inviter = domainRelationship.Inviter;
             if (inviter != null)
             {
                 UpdatePointsPool(inviter, domain, IncomeSourceType.Inviter, pointName, rule.InviterPoints);
-                pointsDetails.PointDetailList.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
+                pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
                     IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
             }
         }
 
+        var details = SettlingSelfIncreasingPoints(dappId, user, actionName);
+        if (details.PointsDetails.Count > 0)
+            pointsDetails.PointsChangedDetails.PointsDetails.AddRange(details.PointsDetails);
         // Points details
         Context.Fire(pointsDetails);
     }
 
-    private void SettlingSelfIncreasingPoints(Hash dappId, Address user)
+    private PointsChangedDetails SettlingSelfIncreasingPoints(Hash dappId, Address user, string actionName)
     {
-        // TODO: add exist check.
         var pointsRule = State.SelfIncreasingPointsRules[dappId];
+        Assert(pointsRule != null, "This Dapp has not yet set the rules for self-increasing points");
         var pointName = pointsRule.PointName;
         var domain = State.RegistrationMap[dappId][user];
-        var pointsUpdated = new PointsUpdated { PointStateList = new() };
+        var pointsDetails = new PointsChangedDetails();
 
         // settle user
         // Only registered users can calculate self-increasing points, and only registered users have settlement time.
-        var userLastBillingUpdateTimes = State.LastBillingUpdateTimes[dappId][user][IncomeSourceType.User];
+        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId][user][IncomeSourceType.User];
         if (userLastBillingUpdateTimes != null)
         {
             UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName, pointsRule.UserPoints, domain);
-            pointsUpdated.PointStateList.PointStates.Add(GeneratePointsState(user, domain,
-                IncomeSourceType.User, pointName));
+            pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
+                IncomeSourceType.User, pointName, pointsRule.UserPoints, dappId));
         }
 
         // settle invitee
-        if (domain != State.DappInfos[dappId].OfficialDomain)
-        {
-            var domainRelationship = State.DomainOperatorRelationshipMap[domain];
-            var invitee = domainRelationship.Invitee;
-            UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName, pointsRule.KolPoints, domain);
-            pointsUpdated.PointStateList.PointStates.Add(GeneratePointsState(invitee, domain,
-                IncomeSourceType.Kol, pointName));
+        if (domain == State.DappInfos[dappId].OfficialDomain) return pointsDetails;
 
-            // settle inviter
-            // kol registered a domain for himself but there was no inviter
-            var inviter = domainRelationship.Inviter;
-            if (inviter != null)
-            {
-                UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
-                    pointsRule.InviterPoints, domain);
-                pointsUpdated.PointStateList.PointStates.Add(GeneratePointsState(inviter, domain,
-                    IncomeSourceType.Inviter, pointName));
-            }
-        }
+        var domainRelationship = State.DomainsMap[domain];
+        var invitee = domainRelationship.Invitee;
+        UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName, pointsRule.KolPoints, domain);
+        pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
+            IncomeSourceType.Kol, pointName, pointsRule.KolPoints, dappId));
 
-        if (pointsUpdated.PointStateList.PointStates.Count != 0) Context.Fire(pointsUpdated);
+        // settle inviter
+        // kol registered a domain for himself but there was no inviter
+        var inviter = domainRelationship.Inviter;
+        if (inviter == null) return pointsDetails;
+
+        UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
+            pointsRule.InviterPoints, domain);
+        pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
+            IncomeSourceType.Inviter, pointName, pointsRule.InviterPoints, dappId));
+
+        return pointsDetails;
     }
 
     private void UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
         long points, string domain)
     {
-        var lastBlockTimestamp = State.LastBillingUpdateTimes[dappId][address][type];
+        var lastBlockTimestamp = State.LastPointsUpdateTimes[dappId][address][type];
         if (lastBlockTimestamp != null)
         {
             var lastBlockTime = lastBlockTimestamp.Seconds;
@@ -207,45 +220,37 @@ public partial class PointsContract
             UpdatePointsPool(address, domain, type, pointName, waitingSettledPoints);
         }
 
-        State.LastBillingUpdateTimes[dappId][address][type] = Context.CurrentBlockTime;
+        State.LastPointsUpdateTimes[dappId][address][type] = Context.CurrentBlockTime;
     }
 
     private long CalculateWaitingSettledSelfIncreasingPoints(Hash dappId, Address address, IncomeSourceType type,
         long currentBlockTime, long lastBlockTime, string domain, long points)
     {
+        var timeGap = currentBlockTime.Sub(lastBlockTime);
         return type switch
         {
-            IncomeSourceType.Inviter => State.InviterRelationships[dappId][address] * points *
-                                        (currentBlockTime - lastBlockTime),
-            IncomeSourceType.Kol => State.Relationships[dappId][address][domain] * points *
-                                    (currentBlockTime - lastBlockTime),
-            IncomeSourceType.User => points * (currentBlockTime - lastBlockTime),
+            IncomeSourceType.Inviter => points.Mul(timeGap).Mul(State.TierTwoInvitationCount[dappId][address]),
+            IncomeSourceType.Kol => points.Mul(timeGap).Mul(State.InvitationCount[dappId][address][domain]),
+            IncomeSourceType.User => points.Mul(timeGap),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
         };
     }
 
+    // PointsBalance
     private void UpdatePointsPool(Address address, string domain, IncomeSourceType type, string pointName, long amount)
-        => State.PointsPool[address][domain][type][pointName] += amount;
-
-    private PointsState GeneratePointsState(Address address, string domain, IncomeSourceType type, string pointName)
     {
-        return new PointsState
-        {
-            Address = address,
-            Domain = domain,
-            IncomeSourceType = type,
-            PointName = pointName,
-            Balance = State.PointsPool[address][domain][type][pointName]
-        };
+        State.PointsPool[address][domain][type][pointName] =
+            State.PointsPool[address][domain][type][pointName].Add(amount);
     }
 
-    private PointsDetail GeneratePointsDetail(Address address, string domain, string actionName, IncomeSourceType type,
-        string pointName, long amount, Hash dappId)
+    private PointsChangedDetail GeneratePointsDetail(Address address, string domain, string actionName,
+        IncomeSourceType type, string pointName, long amount, Hash dappId)
     {
-        return new PointsDetail
+        // pointsChanged
+        return new PointsChangedDetail
         {
             DappId = dappId,
-            PointerAddress = address,
+            PointsReceiver = address,
             Domain = domain,
             IncomeSourceType = type,
             ActionName = actionName,

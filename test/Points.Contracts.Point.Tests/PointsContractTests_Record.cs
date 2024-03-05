@@ -12,7 +12,7 @@ namespace Points.Contracts.Point;
 public partial class PointsContractTests
 {
     [Fact]
-    public async Task ApplyToOperatorTests()
+    public async Task ApplyToBeAdvocateTests()
     {
         await Initialize();
         await CreatePoint();
@@ -21,7 +21,7 @@ public partial class PointsContractTests
         await SetMaxApplyCount();
 
         const string domain = "user.com";
-        var result = await PointsContractStub.ApplyToOperator.SendAsync(new ApplyToOperatorInput
+        var result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
             DappId = DefaultDappId,
@@ -35,7 +35,7 @@ public partial class PointsContractTests
         getResult.Inviter.ShouldBe(DefaultAddress);
 
         const string domain1 = "user1.com";
-        result = await PointsContractStub.ApplyToOperator.SendAsync(new ApplyToOperatorInput
+        result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain1,
             DappId = DefaultDappId,
@@ -72,7 +72,7 @@ public partial class PointsContractTests
     }
 
     [Fact]
-    public async Task ApplyToOperatorTests_Fail()
+    public async Task ApplyToBeAdvocateTests_Fail()
     {
         await Initialize();
         await CreatePoint();
@@ -80,7 +80,7 @@ public partial class PointsContractTests
         await SetMaxApplyCount();
 
         const string domain = "example.com";
-        var result = await PointsContractStub.ApplyToOperator.SendWithExceptionAsync(new ApplyToOperatorInput
+        var result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = string.Join(".", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 10)),
             DappId = DefaultDappId,
@@ -88,14 +88,14 @@ public partial class PointsContractTests
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
 
-        result = await PointsContractStub.ApplyToOperator.SendWithExceptionAsync(new ApplyToOperatorInput
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             DappId = DefaultDappId,
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
 
-        result = await PointsContractStub.ApplyToOperator.SendWithExceptionAsync(new ApplyToOperatorInput
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
             DappId = HashHelper.ComputeFrom("NotExistDappName"),
@@ -103,21 +103,21 @@ public partial class PointsContractTests
         });
         result.TransactionResult.Error.ShouldContain("Invalid dapp id.");
 
-        result = await PointsContractStub.ApplyToOperator.SendWithExceptionAsync(new ApplyToOperatorInput
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
             DappId = DefaultDappId,
         });
         result.TransactionResult.Error.ShouldContain("Invalid invitee.");
 
-        await PointsContractStub.ApplyToOperator.SendAsync(new ApplyToOperatorInput
+        await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
             DappId = DefaultDappId,
             Invitee = UserAddress
         });
 
-        result = await PointsContractStub.ApplyToOperator.SendWithExceptionAsync(new ApplyToOperatorInput
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
             DappId = DefaultDappId,
@@ -127,7 +127,7 @@ public partial class PointsContractTests
 
         for (var i = 0; i < DefaultMaxApply.Value; i++)
         {
-            await PointsContractUser2Stub.ApplyToOperator.SendAsync(new ApplyToOperatorInput
+            await PointsContractUser2Stub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
             {
                 Domain = $"user{i}.com",
                 DappId = DefaultDappId,
@@ -135,7 +135,7 @@ public partial class PointsContractTests
             });
         }
 
-        result = await PointsContractUser2Stub.ApplyToOperator.SendWithExceptionAsync(new ApplyToOperatorInput
+        result = await PointsContractUser2Stub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = "exceedMaxApply.com",
             DappId = DefaultDappId,
@@ -187,7 +187,7 @@ public partial class PointsContractTests
 
         // create domain
         const string domain = "abc.com";
-        await PointsContractStub.ApplyToOperator.SendAsync(new ApplyToOperatorInput
+        await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
             DappId = DefaultDappId,

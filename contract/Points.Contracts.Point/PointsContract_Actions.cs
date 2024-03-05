@@ -1,6 +1,5 @@
 using System.Linq;
 using AElf;
-using AElf.Sdk.CSharp;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
@@ -43,7 +42,7 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
         return new Empty();
     }
 
-    public override Empty SetMaxApplyCount(Int32Value input)
+    public override Empty SetApplyDomainMaxCount(Int32Value input)
     {
         AssertInitialized();
         AssertAdmin();
@@ -51,37 +50,5 @@ public partial class PointsContract : PointsContractContainer.PointsContractBase
 
         State.MaxApplyCount.Value = input.Value;
         return new Empty();
-    }
-
-    public override Empty CreatePoint(CreatePointInput input)
-    {
-        AssertInitialized();
-        AssertAdmin();
-        AssertValidCreateInput(input);
-
-        var tokenName = input.TokenName;
-        var decimals = input.Decimals;
-        State.PointInfos[tokenName] = new PointInfo
-        {
-            TokenName = tokenName,
-            Decimals = decimals
-        };
-
-        Context.Fire(new PointCreated
-        {
-            TokenName = tokenName,
-            Decimals = decimals
-        });
-        return new Empty();
-    }
-
-    private void AssertValidCreateInput(CreatePointInput input)
-    {
-        Assert(input.TokenName.Length is > 0 and <= PointsContractConstants.TokenNameLength
-               && input.Decimals is >= 0 and <= PointsContractConstants.MaxDecimals, "Invalid input.");
-
-        var empty = new PointInfo();
-        var existing = State.PointInfos[input.TokenName];
-        Assert(existing == null || existing.Equals(empty), "Point token already exists.");
     }
 }

@@ -111,7 +111,7 @@ public partial class PointsContractTests : PointsContractTestBase
 
         var result = await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
         {
-            TokenName = DefaultPointName,
+            PointsName = DefaultPointName,
             Decimals = 8
         });
         result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
@@ -133,7 +133,7 @@ public partial class PointsContractTests : PointsContractTestBase
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = ""
+            PointsName = ""
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
@@ -145,20 +145,20 @@ public partial class PointsContractTests : PointsContractTestBase
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = DefaultPointName,
+            PointsName = DefaultPointName,
             Decimals = -1
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = string.Join("-", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 4))
+            PointsName = string.Join("-", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 4))
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = DefaultPointName,
+            PointsName = DefaultPointName,
             Decimals = 19
         });
         result.TransactionResult.Error.ShouldContain("Invalid input.");
@@ -166,7 +166,7 @@ public partial class PointsContractTests : PointsContractTestBase
         await CreatePoint();
         result = await PointsContractStub.CreatePoint.SendWithExceptionAsync(new CreatePointInput
         {
-            TokenName = DefaultPointName,
+            PointsName = DefaultPointName,
             Decimals = 8
         });
         result.TransactionResult.Error.ShouldContain("Point token already exists.");
@@ -185,33 +185,33 @@ public partial class PointsContractTests : PointsContractTestBase
     [Fact]
     public async Task MaxApplyCountTest_Fail()
     {
-        var result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(DefaultMaxApply);
+        var result = await PointsContractStub.SetApplyDomainMaxCount.SendWithExceptionAsync(DefaultMaxApply);
         result.TransactionResult.Error.ShouldContain("Not initialized.");
 
         await Initialize();
 
-        result = await PointsContractUserStub.SetMaxApplyCount.SendWithExceptionAsync(DefaultMaxApply);
+        result = await PointsContractUserStub.SetApplyDomainMaxCount.SendWithExceptionAsync(DefaultMaxApply);
         result.TransactionResult.Error.ShouldContain("No permission.");
 
         var errorMaxApply = new Int32Value { Value = -1 };
-        result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(errorMaxApply);
+        result = await PointsContractStub.SetApplyDomainMaxCount.SendWithExceptionAsync(errorMaxApply);
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         errorMaxApply = new Int32Value();
-        result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(errorMaxApply);
+        result = await PointsContractStub.SetApplyDomainMaxCount.SendWithExceptionAsync(errorMaxApply);
         result.TransactionResult.Error.ShouldContain("Invalid input.");
     }
 
-    private async Task SetMaxApplyCount() => await PointsContractStub.SetMaxApplyCount.SendAsync(DefaultMaxApply);
+    private async Task SetMaxApplyCount() => await PointsContractStub.SetApplyDomainMaxCount.SendAsync(DefaultMaxApply);
     private async Task Initialize() => await PointsContractStub.Initialize.SendAsync(new InitializeInput());
 
     private async Task CreatePoint()
     {
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
-            { TokenName = DefaultPointName, Decimals = 8 });
+            { PointsName = DefaultPointName, Decimals = 8 });
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
-            { TokenName = JoinPointName, Decimals = 8 });
+            { PointsName = JoinPointName, Decimals = 8 });
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
-            { TokenName = SelfIncreasingPointName, Decimals = 8 });
+            { PointsName = SelfIncreasingPointName, Decimals = 8 });
     }
 }

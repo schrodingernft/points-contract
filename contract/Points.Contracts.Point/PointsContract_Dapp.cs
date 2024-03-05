@@ -6,48 +6,60 @@ namespace Points.Contracts.Point;
 
 public partial class PointsContract
 {
-    public override Empty SetDappInformation(SetDappInformationInput input)
+    public override Empty AddDapp(AddDappInput input)
     {
         AssertInitialized();
         AssertAdmin();
         AssertDomainFormat(input.OfficialDomain);
-        Assert(input.DappAdmin.Value != null && input.DappId != null &&
-               input.DappsEarningRules?.EarningRules?.Count > 0, "Invalid earning rules.");
 
-        foreach (var rule in input.DappsEarningRules.EarningRules)
-        {
-            Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[rule.PointName] != null,
-                "Wrong points name input.");
-            Assert(!string.IsNullOrEmpty(rule.ActionName), "ActionName cannot be empty.");
-            Assert(rule.UserPoints > 0 && rule.KolPoints > 0 && rule.InviterPoints > 0,
-                "Points must be greater than 0.");
-        }
-
+        var dappId = HashHelper.ConcatAndCompute(Context.PreviousBlockHash, Context.TransactionId,
+            HashHelper.ComputeFrom(input));
         var dappInfo = new DappInfo
         {
             DappAdmin = input.DappAdmin,
             OfficialDomain = input.OfficialDomain,
-            DappsEarningRules = input.DappsEarningRules
+            DappContractAddress = input.DappContractAddress
         };
-        State.DappInfos[input.DappId] = dappInfo;
 
-        Context.Fire(new DappInformationChanged
+        State.DappInfos[dappId] = dappInfo;
+
+        Context.Fire(new DappAdded
         {
-            DappId = input.DappId,
+            DappId = dappId,
             DappInfo = dappInfo
         });
 
         return new Empty();
     }
 
+    public override Empty SetDappPointsRules(SetDappPointsRulesInput input)
+    {
+        AssertInitialized();
+        var dappId = input.DappId;
+        AssertDappAdmin(input.DappId);
+
+        foreach (var rule in input.DappPointsRules.PointsRules)
+        {
+            Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[dappId][rule.PointName] != null,
+                "Wrong points name input.");
+            Assert(!string.IsNullOrEmpty(rule.ActionName), "ActionName cannot be empty.");
+            Assert(rule.UserPoints > 0 && rule.KolPoints > 0 && rule.InviterPoints > 0,
+                "Points must be greater than 0.");
+        }
+
+        State.DappInfos[dappId].DappsPointRules.PointsRules.AddRange(input.DappPointsRules.PointsRules);
+
+        return new Empty();
+    }
+
+
     public override Empty SetSelfIncreasingPointsRules(SetSelfIncreasingPointsRulesInput input)
     {
         AssertInitialized();
-        AssertAdmin();
-        Assert(input.DappId != null, "Invalid dapp id.");
+        AssertDappAdmin(input.DappId);
         var rule = input.SelfIncreasingEarningRule;
         Assert(rule != null, "Invalid self-increasing points rules.");
-        Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[rule.PointName] != null,
+        Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[input.DappId][rule.PointName] != null,
             "Wrong points name input.");
         Assert(rule.UserPoints > 0 && rule.KolPoints > 0 && rule.InviterPoints > 0, "Points must be greater than 0.");
 
@@ -59,8 +71,42 @@ public partial class PointsContract
             PointName = rule.PointName,
             UserPoints = rule.UserPoints,
             KolPoints = rule.KolPoints,
-            InviterPoints = rule.InviterPoints
+            InviterPoints = rule.InviterPoints,
+            Frequency = input.Frequency
         });
         return new Empty();
+    }
+
+    public override Empty CreatePoint(CreatePointInput input)
+    {
+        AssertInitialized();
+        AssertDappAdmin(input.DappId);
+        AssertValidCreateInput(input);
+
+        var pointsName = input.PointsName;
+        var decimals = input.Decimals;
+        State.PointInfos[input.DappId][pointsName] = new PointInfo
+        {
+            TokenName = pointsName,
+            Decimals = decimals
+        };
+
+        Context.Fire(new PointCreated
+        {
+            DappId = input.DappId,
+            TokenName = pointsName,
+            Decimals = decimals
+        });
+        return new Empty();
+    }
+
+    private void AssertValidCreateInput(CreatePointInput input)
+    {
+        Assert(input.PointsName.Length is > 0 and <= PointsContractConstants.TokenNameLength
+               && input.Decimals is >= 0 and <= PointsContractConstants.MaxDecimals, "Invalid input.");
+
+        var empty = new PointInfo();
+        var existing = State.PointInfos[input.DappId][input.PointsName];
+        Assert(existing == null || existing.Equals(empty), "Point token already exists.");
     }
 }

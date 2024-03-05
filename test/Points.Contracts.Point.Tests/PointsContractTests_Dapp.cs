@@ -22,7 +22,7 @@ public partial class PointsContractTests
         });
         getResult.DappInfo.DappAdmin.ShouldBe(DefaultAddress);
         getResult.DappInfo.OfficialDomain.ShouldBe(DefaultOfficialDomain);
-        getResult.DappInfo.DappsEarningRules.EarningRules.Count.ShouldBe(2);
+        getResult.DappInfo.DappsPointRules.PointsRules.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -39,9 +39,7 @@ public partial class PointsContractTests
         var input = new SetDappInformationInput
         {
             DappAdmin = DefaultAddress,
-            DappId = DefaultDappId,
             OfficialDomain = DefaultOfficialDomain,
-            DappsEarningRules = new PointsRuleList()
         };
 
         input.OfficialDomain = "";
@@ -58,94 +56,92 @@ public partial class PointsContractTests
         result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
         input.DappAdmin = DefaultAddress;
-        input.DappId = Hash.Empty;
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
-        input.DappId = DefaultDappId;
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Invalid earning rules.");
 
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = DefaultActionName,
-            PointName = DefaultPointName,
-            UserPoints = 10000000,
-            KolPoints = 1000000,
-            InviterPoints = 100000
-        });
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = DefaultActionName,
+        //     PointName = DefaultPointName,
+        //     UserPoints = 10000000,
+        //     KolPoints = 1000000,
+        //     InviterPoints = 100000
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
 
-        input.DappsEarningRules = new PointsRuleList();
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = DefaultActionName,
-            PointName = "",
-            UserPoints = 10000000,
-            KolPoints = 1000000,
-            InviterPoints = 100000
-        });
+        // input.DappsEarningRules = new PointsRuleList();
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = DefaultActionName,
+        //     PointName = "",
+        //     UserPoints = 10000000,
+        //     KolPoints = 1000000,
+        //     InviterPoints = 100000
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
 
         await CreatePoint();
-        input.DappsEarningRules = new PointsRuleList();
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = "",
-            PointName = DefaultPointName,
-            UserPoints = 10000000,
-            KolPoints = 1000000,
-            InviterPoints = 100000
-        });
+        // input.DappsEarningRules = new PointsRuleList();
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = "",
+        //     PointName = DefaultPointName,
+        //     UserPoints = 10000000,
+        //     KolPoints = 1000000,
+        //     InviterPoints = 100000
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("ActionName cannot be empty.");
 
-        input.DappsEarningRules = new PointsRuleList();
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = DefaultActionName,
-            PointName = DefaultPointName,
-            UserPoints = -1,
-            KolPoints = 1000000,
-            InviterPoints = 100000
-        });
+        // input.DappsEarningRules = new PointsRuleList();
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = DefaultActionName,
+        //     PointName = DefaultPointName,
+        //     UserPoints = -1,
+        //     KolPoints = 1000000,
+        //     InviterPoints = 100000
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
 
-        input.DappsEarningRules = new PointsRuleList();
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = DefaultActionName,
-            PointName = DefaultPointName,
-            UserPoints = 10000000,
-            KolPoints = -1,
-            InviterPoints = 100000
-        });
+        // input.DappsEarningRules = new PointsRuleList();
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = DefaultActionName,
+        //     PointName = DefaultPointName,
+        //     UserPoints = 10000000,
+        //     KolPoints = -1,
+        //     InviterPoints = 100000
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
 
-        input.DappsEarningRules = new PointsRuleList();
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = DefaultActionName,
-            PointName = DefaultPointName,
-            UserPoints = 10000000,
-            KolPoints = 1000000,
-            InviterPoints = -1
-        });
+        // input.DappsEarningRules = new PointsRuleList();
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = DefaultActionName,
+        //     PointName = DefaultPointName,
+        //     UserPoints = 10000000,
+        //     KolPoints = 1000000,
+        //     InviterPoints = -1
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
 
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
-        input.DappsEarningRules = new PointsRuleList();
-        input.DappsEarningRules.EarningRules.Add(new PointsRule
-        {
-            ActionName = DefaultActionName,
-            PointName = DefaultPointName,
-            UserPoints = 10000000,
-            KolPoints = 1000000,
-        });
+        // input.DappsEarningRules = new PointsRuleList();
+        // input.DappsEarningRules.EarningRules.Add(new PointsRule
+        // {
+        //     ActionName = DefaultActionName,
+        //     PointName = DefaultPointName,
+        //     UserPoints = 10000000,
+        //     KolPoints = 1000000,
+        // });
         result = await PointsContractStub.SetDappInformation.SendWithExceptionAsync(input);
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
     }
@@ -193,7 +189,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = DefaultDappId,
-                SelfIncreasingEarningRule = new EarningRule
+                SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -207,7 +203,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = DefaultDappId,
-                SelfIncreasingEarningRule = new EarningRule
+                SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = "",
                     UserPoints = 10000000,
@@ -223,7 +219,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = DefaultDappId,
-                SelfIncreasingEarningRule = new EarningRule
+                SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = -1,
@@ -237,7 +233,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = DefaultDappId,
-                SelfIncreasingEarningRule = new EarningRule
+                SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -251,7 +247,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = DefaultDappId,
-                SelfIncreasingEarningRule = new EarningRule
+                SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -265,7 +261,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = DefaultDappId,
-                SelfIncreasingEarningRule = new EarningRule
+                SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -280,7 +276,7 @@ public partial class PointsContractTests
         await PointsContractStub.SetSelfIncreasingPointsRules.SendAsync(new SetSelfIncreasingPointsRulesInput
         {
             DappId = DefaultDappId,
-            SelfIncreasingEarningRule = new EarningRule
+            SelfIncreasingEarningRule = new PointsRule
             {
                 PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
@@ -295,30 +291,29 @@ public partial class PointsContractTests
         await PointsContractStub.SetDappInformation.SendAsync(new SetDappInformationInput
         {
             DappAdmin = DefaultAddress,
-            DappId = DefaultDappId,
             OfficialDomain = DefaultOfficialDomain,
-            DappsEarningRules = new PointsRuleList
-            {
-                EarningRules =
-                {
-                    new PointsRule
-                    {
-                        ActionName = DefaultActionName,
-                        PointName = DefaultPointName,
-                        UserPoints = 10000000,
-                        KolPoints = 1000000,
-                        InviterPoints = 100000
-                    },
-                    new PointsRule
-                    {
-                        ActionName = JoinActionName,
-                        PointName = JoinPointName,
-                        UserPoints = 20000000,
-                        KolPoints = 2000000,
-                        InviterPoints = 200000
-                    }
-                }
-            }
+            // DappsEarningRules = new PointsRuleList
+            // {
+            //     EarningRules =
+            //     {
+            //         new PointsRule
+            //         {
+            //             ActionName = DefaultActionName,
+            //             PointName = DefaultPointName,
+            //             UserPoints = 10000000,
+            //             KolPoints = 1000000,
+            //             InviterPoints = 100000
+            //         },
+            //         new PointsRule
+            //         {
+            //             ActionName = JoinActionName,
+            //             PointName = JoinPointName,
+            //             UserPoints = 20000000,
+            //             KolPoints = 2000000,
+            //             InviterPoints = 200000
+            //         }
+            //     }
+            // }
         });
     }
 }

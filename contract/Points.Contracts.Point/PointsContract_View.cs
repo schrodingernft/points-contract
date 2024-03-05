@@ -13,7 +13,7 @@ public partial class PointsContract
         => new() { ReservedDomainList = State.ReservedDomains.Value };
 
     public override DomainOperatorRelationship GetDomainApplyInfo(StringValue domain)
-        => State.DomainOperatorRelationshipMap[domain.Value];
+        => State.DomainsMap[domain.Value];
 
     public override GetPointsBalanceOutput GetPointsBalance(GetPointsBalanceInput input)
     {
@@ -23,14 +23,12 @@ public partial class PointsContract
         var domain = input.Domain;
         var pointName = input.PointName;
         Assert(address != null && !string.IsNullOrEmpty(domain) &&
-               !string.IsNullOrEmpty(pointName) && State.PointInfos[pointName] != null, "Invalid input.");
+               !string.IsNullOrEmpty(pointName) && State.PointInfos[dappId][pointName] != null, "Invalid input.");
         Assert(dappId != null && State.DappInfos[dappId]?.OfficialDomain == input.Domain ||
-               State.DomainOperatorRelationshipMap[domain] != null, "Invalid domain.");
+               State.DomainsMap[domain] != null, "Invalid domain.");
 
-        var currentPoints = GeneratePointsState(address, domain, type, pointName);
-        var balance = currentPoints.Balance;
-
-        var userLastBillingUpdateTimes = State.LastBillingUpdateTimes[dappId]?[address]?[type];
+        var balance = State.PointsPool[address][domain][type][pointName];
+        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId]?[address]?[type];
         long increasingPoints = 0;
 
         var rule = State.SelfIncreasingPointsRules[dappId];
