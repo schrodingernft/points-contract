@@ -196,6 +196,10 @@ public partial class PointsContractTests : PointsContractTestBase
         var errorMaxApply = new Int32Value { Value = -1 };
         result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(errorMaxApply);
         result.TransactionResult.Error.ShouldContain("Invalid input.");
+
+        errorMaxApply = new Int32Value();
+        result = await PointsContractStub.SetMaxApplyCount.SendWithExceptionAsync(errorMaxApply);
+        result.TransactionResult.Error.ShouldContain("Invalid input.");
     }
 
     private async Task SetMaxApplyCount() => await PointsContractStub.SetMaxApplyCount.SendAsync(DefaultMaxApply);
