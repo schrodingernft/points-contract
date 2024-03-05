@@ -19,7 +19,7 @@ public partial class PointsContractState : ContractState
     public MappedState<Hash, Address, string, int> InvitationCount { get; set; }
     public MappedState<Hash, Address, string, int> TierTwoInvitationCount { get; set; }
 
-    public MappedState<Hash, Address, IncomeSourceType, Timestamp> LastPointsUpdateTimes { get; set; }
+    public MappedState<Hash, Address, string, IncomeSourceType, Timestamp> LastPointsUpdateTimes { get; set; }
 
     public MappedState<Address, string, IncomeSourceType, string, long> PointsBalance { get; set; }
 }

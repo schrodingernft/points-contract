@@ -27,7 +27,7 @@ public partial class PointsContract
                State.DomainsMap[domain] != null, "Invalid domain.");
 
         var balance = State.PointsBalance[address][domain][type][pointName];
-        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId]?[address]?[type];
+        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId]?[address]?[domain]?[type];
         long increasingPoints = 0;
 
         var rule = State.SelfIncreasingPointsRules[dappId];

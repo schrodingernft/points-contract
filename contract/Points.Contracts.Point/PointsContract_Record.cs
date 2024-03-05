@@ -45,7 +45,7 @@ public partial class PointsContract
 
         // SettlingPoints(dappId, registrant, nameof(Join));
         // init first join time
-        State.LastPointsUpdateTimes[dappId][registrant][IncomeSourceType.User] = Context.CurrentBlockTime;
+        State.LastPointsUpdateTimes[dappId][registrant][domain][IncomeSourceType.User] = Context.CurrentBlockTime;
 
         Context.Fire(new Joined
         {
@@ -158,7 +158,7 @@ public partial class PointsContract
 
         // settle user
         // Only registered users can calculate self-increasing points, and only registered users have settlement time.
-        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId][user][IncomeSourceType.User];
+        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId][user][domain][IncomeSourceType.User];
         if (userLastBillingUpdateTimes != null)
         {
             UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName, pointsRule.UserPoints, domain);
@@ -191,7 +191,7 @@ public partial class PointsContract
     private void UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
         long points, string domain)
     {
-        var lastBlockTimestamp = State.LastPointsUpdateTimes[dappId][address][type];
+        var lastBlockTimestamp = State.LastPointsUpdateTimes[dappId][address][domain][type];
         if (lastBlockTimestamp != null)
         {
             var lastBlockTime = lastBlockTimestamp.Seconds;
@@ -201,7 +201,7 @@ public partial class PointsContract
             UpdatePointsBalance(address, domain, type, pointName, waitingSettledPoints);
         }
 
-        State.LastPointsUpdateTimes[dappId][address][type] = Context.CurrentBlockTime;
+        State.LastPointsUpdateTimes[dappId][address][domain][type] = Context.CurrentBlockTime;
     }
 
     private long CalculateWaitingSettledSelfIncreasingPoints(Hash dappId, Address address, IncomeSourceType type,
