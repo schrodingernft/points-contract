@@ -32,11 +32,7 @@ public partial class PointsContract
 
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
-            // All points actions will be settled by self-increasing points.
-            // SettlingSelfIncreasingPoints(dappId, registrant);
-
             // The number of user will only be calculated during the registration process
-            // TODO 理清domain
             var invitee = relationship.Invitee;
             State.InvitationCount[dappId][invitee] = State.InvitationCount[dappId][invitee].Add(1);
             var inviter = relationship.Inviter;
@@ -143,6 +139,7 @@ public partial class PointsContract
             }
         }
 
+        // All points actions will be settled by self-increasing points.
         var details = SettlingSelfIncreasingPoints(dappId, user, actionName);
         if (details.PointsDetails.Count > 0)
             pointsDetails.PointsChangedDetails.PointsDetails.AddRange(details.PointsDetails);
