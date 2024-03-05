@@ -46,7 +46,7 @@ public partial class PointsContract
             }
         }
 
-        SettlingPoints(dappId, registrant, nameof(Join));
+        // SettlingPoints(dappId, registrant, nameof(Join));
         // init first join time
         State.LastPointsUpdateTimes[dappId][registrant][IncomeSourceType.User] = Context.CurrentBlockTime;
 
@@ -222,8 +222,8 @@ public partial class PointsContract
     // PointsBalance
     private void UpdatePointsPool(Address address, string domain, IncomeSourceType type, string pointName, long amount)
     {
-        State.PointsPool[address][domain][type][pointName] =
-            State.PointsPool[address][domain][type][pointName].Add(amount);
+        State.PointsBalance[address][domain][type][pointName] =
+            State.PointsBalance[address][domain][type][pointName].Add(amount);
     }
 
     private PointsChangedDetail GeneratePointsDetail(Address address, string domain, string actionName,
@@ -239,7 +239,7 @@ public partial class PointsContract
             ActionName = actionName,
             PointsName = pointName,
             IncreaseAmount = amount,
-            Balance = State.PointsPool[address][domain][type][pointName]
+            Balance = State.PointsBalance[address][domain][type][pointName]
         };
     }
 }

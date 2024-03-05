@@ -192,7 +192,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = dappId,
-                SelfIncreasingEarningRule = new PointsRule
+                SelfIncreasingPointsRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -206,7 +206,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = dappId,
-                SelfIncreasingEarningRule = new PointsRule
+                SelfIncreasingPointsRule = new PointsRule
                 {
                     PointName = "",
                     UserPoints = 10000000,
@@ -222,7 +222,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = dappId,
-                SelfIncreasingEarningRule = new PointsRule
+                SelfIncreasingPointsRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = -1,
@@ -236,7 +236,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = dappId,
-                SelfIncreasingEarningRule = new PointsRule
+                SelfIncreasingPointsRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -250,7 +250,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = dappId,
-                SelfIncreasingEarningRule = new PointsRule
+                SelfIncreasingPointsRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -264,7 +264,7 @@ public partial class PointsContractTests
             new SetSelfIncreasingPointsRulesInput
             {
                 DappId = dappId,
-                SelfIncreasingEarningRule = new PointsRule
+                SelfIncreasingPointsRule = new PointsRule
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
@@ -279,12 +279,42 @@ public partial class PointsContractTests
         await PointsContractStub.SetSelfIncreasingPointsRules.SendAsync(new SetSelfIncreasingPointsRulesInput
         {
             DappId = dappId,
-            SelfIncreasingEarningRule = new PointsRule
+            SelfIncreasingPointsRule = new PointsRule
             {
                 PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
                 KolPoints = 1000000,
                 InviterPoints = 100000
+            }
+        });
+    }
+
+    private async Task SetDappPointsRules(Hash dappId)
+    {
+        await PointsContractStub.SetDappPointsRules.SendAsync(new SetDappPointsRulesInput
+        {
+            DappId = dappId,
+            DappPointsRules = new PointsRuleList
+            {
+                PointsRules =
+                {
+                    new PointsRule
+                    {
+                        ActionName = DefaultActionName,
+                        PointName = DefaultPointName,
+                        UserPoints = 10000000,
+                        KolPoints = 1000000,
+                        InviterPoints = 100000
+                    },
+                    new PointsRule
+                    {
+                        ActionName = JoinActionName,
+                        PointName = JoinPointName,
+                        UserPoints = 20000000,
+                        KolPoints = 2000000,
+                        InviterPoints = 200000
+                    }
+                }
             }
         });
     }

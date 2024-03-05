@@ -17,6 +17,7 @@ public partial class PointsContractTests
         await Initialize();
         var dappId = await AddDapp();
         await CreatePoint(dappId);
+        await SetDappPointsRules(dappId);
         await SetSelfIncreasingPointsRules(dappId);
         await SetMaxApplyCount();
 
@@ -76,7 +77,6 @@ public partial class PointsContractTests
     {
         await Initialize();
         var dappId = await AddDapp();
-        await CreatePoint(dappId);
         await SetMaxApplyCount();
 
         const string domain = "example.com";
@@ -110,6 +110,9 @@ public partial class PointsContractTests
         });
         result.TransactionResult.Error.ShouldContain("Invalid invitee.");
 
+        await CreatePoint(dappId);
+        await SetDappPointsRules(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
         await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
@@ -150,6 +153,7 @@ public partial class PointsContractTests
         await Initialize();
         var dappId = await AddDapp();
         await CreatePoint(dappId);
+        await SetDappPointsRules(dappId);
         await SetSelfIncreasingPointsRules(dappId);
         await SetMaxApplyCount();
 
@@ -173,7 +177,7 @@ public partial class PointsContractTests
             PointName = JoinPointName
         });
         getBalanceResult.PointName.ShouldBe(JoinPointName);
-        getBalanceResult.Balance.ShouldBe(20000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult.Balance.ShouldBe(20000000); //
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
             DappId = dappId,
@@ -276,7 +280,6 @@ public partial class PointsContractTests
         await Initialize();
         var dappId = await AddDapp();
         await CreatePoint(dappId);
-        await SetSelfIncreasingPointsRules(dappId);
         await SetMaxApplyCount();
 
         // not dapp admin
@@ -322,6 +325,8 @@ public partial class PointsContractTests
         result.TransactionResult.Error.ShouldContain("Not exist domain.");
 
         // register twice
+        await SetDappPointsRules(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
         await PointsContractStub.Join.SendAsync(new JoinInput
         {
             DappId = dappId,

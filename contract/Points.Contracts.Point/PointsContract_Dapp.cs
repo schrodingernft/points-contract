@@ -47,7 +47,14 @@ public partial class PointsContract
                 "Points must be greater than 0.");
         }
 
-        State.DappInfos[dappId].DappsPointRules.PointsRules.AddRange(input.DappPointsRules.PointsRules);
+        var info = State.DappInfos[dappId];
+        State.DappInfos[dappId] = new DappInfo
+        {
+            DappAdmin = info.DappAdmin,
+            OfficialDomain = info.OfficialDomain,
+            DappsPointRules = new PointsRuleList { PointsRules = { input.DappPointsRules.PointsRules } },
+            DappContractAddress = info.DappContractAddress
+        };
 
         return new Empty();
     }
@@ -59,7 +66,7 @@ public partial class PointsContract
         AssertDappAdmin(input.DappId);
         Assert(State.SelfIncreasingPointsRules[input.DappId] == null, "Self-increasing points rules already set.");
 
-        var rule = input.SelfIncreasingEarningRule;
+        var rule = input.SelfIncreasingPointsRule;
         Assert(rule != null, "Invalid self-increasing points rules.");
         Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[input.DappId][rule.PointName] != null,
             "Wrong points name input.");

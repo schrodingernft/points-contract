@@ -21,5 +21,5 @@ public partial class PointsContractState : ContractState
 
     public MappedState<Hash, Address, IncomeSourceType, Timestamp> LastPointsUpdateTimes { get; set; }
 
-    public MappedState<Address, string, IncomeSourceType, string, long> PointsPool { get; set; }
+    public MappedState<Address, string, IncomeSourceType, string, long> PointsBalance { get; set; }
 }

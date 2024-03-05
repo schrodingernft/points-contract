@@ -32,10 +32,10 @@ public class PointsContractTestBase : DAppContractTestBase<PointsContractTestMod
     protected readonly IBlockTimeProvider BlockTimeProvider;
 
     protected const string DefaultPointName = "APPLY-0";
-    protected const string DefaultActionName = "apply";
+    protected const string DefaultActionName = "Apply";
     protected const string JoinPointName = "JOIN-0";
     protected const string SelfIncreasingPointName = "INCREASE-0";
-    protected const string JoinActionName = "join";
+    protected const string JoinActionName = "Join";
     protected const string DefaultOfficialDomain = "official.com";
     // protected static readonly Hash DefaultDappId = HashHelper.ComputeFrom("ABC");
     protected static readonly Int32Value DefaultMaxApply = new() { Value = 2 };

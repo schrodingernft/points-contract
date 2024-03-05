@@ -168,7 +168,7 @@ message GetDappInformationOutput {
 
 message SetSelfIncreasingPointsRulesInput {
     aelf.Hash dapp_id = 1;
-    PointsRule self_increasing_earning_rule = 2;
+    PointsRule self_increasing_points_rule = 2;
     int32 frequency = 3;
 }
 

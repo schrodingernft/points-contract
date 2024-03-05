@@ -26,7 +26,7 @@ public partial class PointsContract
         Assert(dappId != null && State.DappInfos[dappId]?.OfficialDomain == input.Domain ||
                State.DomainsMap[domain] != null, "Invalid domain.");
 
-        var balance = State.PointsPool[address][domain][type][pointName];
+        var balance = State.PointsBalance[address][domain][type][pointName];
         var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId]?[address]?[type];
         long increasingPoints = 0;
 
