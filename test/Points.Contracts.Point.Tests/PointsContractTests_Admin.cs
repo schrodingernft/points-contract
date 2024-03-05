@@ -197,24 +197,24 @@ public partial class PointsContractTests : PointsContractTestBase
     [Fact]
     public async Task MaxApplyCountTest_Fail()
     {
-        var result = await PointsContractStub.SetApplyDomainMaxCount.SendWithExceptionAsync(DefaultMaxApply);
+        var result = await PointsContractStub.SetMaxApplyDomainCount.SendWithExceptionAsync(DefaultMaxApply);
         result.TransactionResult.Error.ShouldContain("Not initialized.");
 
         await Initialize();
 
-        result = await PointsContractUserStub.SetApplyDomainMaxCount.SendWithExceptionAsync(DefaultMaxApply);
+        result = await PointsContractUserStub.SetMaxApplyDomainCount.SendWithExceptionAsync(DefaultMaxApply);
         result.TransactionResult.Error.ShouldContain("No permission.");
 
         var errorMaxApply = new Int32Value { Value = -1 };
-        result = await PointsContractStub.SetApplyDomainMaxCount.SendWithExceptionAsync(errorMaxApply);
+        result = await PointsContractStub.SetMaxApplyDomainCount.SendWithExceptionAsync(errorMaxApply);
         result.TransactionResult.Error.ShouldContain("Invalid input.");
 
         errorMaxApply = new Int32Value();
-        result = await PointsContractStub.SetApplyDomainMaxCount.SendWithExceptionAsync(errorMaxApply);
+        result = await PointsContractStub.SetMaxApplyDomainCount.SendWithExceptionAsync(errorMaxApply);
         result.TransactionResult.Error.ShouldContain("Invalid input.");
     }
 
-    private async Task SetMaxApplyCount() => await PointsContractStub.SetApplyDomainMaxCount.SendAsync(DefaultMaxApply);
+    private async Task SetMaxApplyCount() => await PointsContractStub.SetMaxApplyDomainCount.SendAsync(DefaultMaxApply);
     private async Task Initialize() => await PointsContractStub.Initialize.SendAsync(new InitializeInput());
 
     private async Task CreatePoint(Hash dappId)

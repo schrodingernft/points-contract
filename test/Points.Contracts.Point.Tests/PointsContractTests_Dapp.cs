@@ -277,7 +277,7 @@ public partial class PointsContractTests
     {
         await PointsContractStub.SetSelfIncreasingPointsRules.SendAsync(new SetSelfIncreasingPointsRulesInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             SelfIncreasingEarningRule = new PointsRule
             {
                 PointName = SelfIncreasingPointName,
