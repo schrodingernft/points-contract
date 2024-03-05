@@ -34,11 +34,12 @@ public partial class PointsContract
         {
             // The number of user will only be calculated during the registration process
             var invitee = relationship.Invitee;
-            State.InvitationCount[dappId][invitee] = State.InvitationCount[dappId][invitee].Add(1);
+            State.InvitationCount[dappId][invitee][domain] = State.InvitationCount[dappId][invitee][domain].Add(1);
             var inviter = relationship.Inviter;
             if (inviter != null)
             {
-                State.TierTwoInvitationCount[dappId][inviter] = State.TierTwoInvitationCount[dappId][inviter].Add(1);
+                State.TierTwoInvitationCount[dappId][inviter][domain] =
+                    State.TierTwoInvitationCount[dappId][inviter][domain].Add(1);
             }
         }
 
@@ -83,7 +84,7 @@ public partial class PointsContract
             .FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for apply.");
         var pointName = rule.PointName;
-        UpdatePointsPool(invitee, domain, IncomeSourceType.Kol, rule.PointName, rule.KolPoints);
+        UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, rule.KolPoints);
 
         var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
         pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
@@ -91,7 +92,7 @@ public partial class PointsContract
 
         if (inviter != invitee)
         {
-            UpdatePointsPool(inviter, domain, IncomeSourceType.Inviter, rule.PointName, rule.InviterPoints);
+            UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, rule.InviterPoints);
             pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
                 IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
         }
@@ -117,7 +118,7 @@ public partial class PointsContract
         var pointName = rule.PointName;
         var domain = State.RegistrationMap[dappId][user];
         var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
-        UpdatePointsPool(user, domain, IncomeSourceType.User, pointName, rule.UserPoints);
+        UpdatePointsBalance(user, domain, IncomeSourceType.User, pointName, rule.UserPoints);
         pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
             IncomeSourceType.User, pointName, rule.UserPoints, dappId));
 
@@ -126,14 +127,14 @@ public partial class PointsContract
             var domainRelationship = State.DomainsMap[domain];
             var invitee = domainRelationship.Invitee;
 
-            UpdatePointsPool(invitee, domain, IncomeSourceType.Kol, pointName, rule.KolPoints);
+            UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, pointName, rule.KolPoints);
             pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
                 IncomeSourceType.Kol, pointName, rule.KolPoints, dappId));
 
             var inviter = domainRelationship.Inviter;
             if (inviter != null)
             {
-                UpdatePointsPool(inviter, domain, IncomeSourceType.Inviter, pointName, rule.InviterPoints);
+                UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, pointName, rule.InviterPoints);
                 pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
                     IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
             }
@@ -197,7 +198,7 @@ public partial class PointsContract
             var waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
                 Context.CurrentBlockTime.Seconds, lastBlockTime, domain, points);
 
-            UpdatePointsPool(address, domain, type, pointName, waitingSettledPoints);
+            UpdatePointsBalance(address, domain, type, pointName, waitingSettledPoints);
         }
 
         State.LastPointsUpdateTimes[dappId][address][type] = Context.CurrentBlockTime;
@@ -209,15 +210,15 @@ public partial class PointsContract
         var timeGap = currentBlockTime.Sub(lastBlockTime);
         return type switch
         {
-            IncomeSourceType.Inviter => points.Mul(timeGap).Mul(State.TierTwoInvitationCount[dappId][address]),
-            IncomeSourceType.Kol => points.Mul(timeGap).Mul(State.InvitationCount[dappId][address]),
+            IncomeSourceType.Inviter => points.Mul(timeGap).Mul(State.TierTwoInvitationCount[dappId][address][domain]),
+            IncomeSourceType.Kol => points.Mul(timeGap).Mul(State.InvitationCount[dappId][address][domain]),
             IncomeSourceType.User => points.Mul(timeGap),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
         };
     }
 
-    // PointsBalance
-    private void UpdatePointsPool(Address address, string domain, IncomeSourceType type, string pointName, long amount)
+    private void UpdatePointsBalance(Address address, string domain, IncomeSourceType type, string pointName,
+        long amount)
     {
         State.PointsBalance[address][domain][type][pointName] =
             State.PointsBalance[address][domain][type][pointName].Add(amount);
