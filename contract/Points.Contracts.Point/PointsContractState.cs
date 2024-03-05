@@ -16,7 +16,7 @@ public partial class PointsContractState : ContractState
     public MappedState<Address, Hash, int> ApplyDomainCount { get; set; }
     public MappedState<Hash, PointsRule> SelfIncreasingPointsRules { get; set; }
     public MappedState<Hash, string, PointInfo> PointInfos { get; set; }
-    public MappedState<Hash, Address, string, int> InvitationCount { get; set; }
+    public MappedState<Hash, Address, int> InvitationCount { get; set; }
     public MappedState<Hash, Address, int> TierTwoInvitationCount { get; set; }
 
     public MappedState<Hash, Address, IncomeSourceType, Timestamp> LastPointsUpdateTimes { get; set; }

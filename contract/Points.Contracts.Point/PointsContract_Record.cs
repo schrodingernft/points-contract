@@ -38,7 +38,7 @@ public partial class PointsContract
             // The number of user will only be calculated during the registration process
             // TODO 理清domain
             var invitee = relationship.Invitee;
-            State.InvitationCount[dappId][invitee][domain] = State.InvitationCount[dappId][invitee][domain].Add(1);
+            State.InvitationCount[dappId][invitee] = State.InvitationCount[dappId][invitee].Add(1);
             var inviter = relationship.Inviter;
             if (inviter != null)
             {
@@ -59,23 +59,6 @@ public partial class PointsContract
 
         return new Empty();
     }
-
-    // todo 删除
-    // public override Empty Settle(SettleInput input)
-    // {
-    //     AssertInitialized();
-    //     var dappId = input.DappId;
-    //     AssertDappAdmin(dappId);
-    //
-    //     var userAddress = input.UserAddress;
-    //     Assert(userAddress.Value != null, "User address cannot be null");
-    //     Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userAddress]), "User has not registered yet");
-    //
-    //     SettlingInviterReferrerPoints(dappId, userAddress);
-    //     SettlingPoints(dappId, userAddress, input.ActionName);
-    //
-    //     return new Empty();
-    // }
 
     public override Empty ApplyToBeAdvocate(ApplyToBeAdvocateInput input)
     {
@@ -230,7 +213,7 @@ public partial class PointsContract
         return type switch
         {
             IncomeSourceType.Inviter => points.Mul(timeGap).Mul(State.TierTwoInvitationCount[dappId][address]),
-            IncomeSourceType.Kol => points.Mul(timeGap).Mul(State.InvitationCount[dappId][address][domain]),
+            IncomeSourceType.Kol => points.Mul(timeGap).Mul(State.InvitationCount[dappId][address]),
             IncomeSourceType.User => points.Mul(timeGap),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
         };

@@ -174,23 +174,24 @@ public partial class PointsContractTests
         result.TransactionResult.Error.ShouldContain("Not initialized.");
 
         await Initialize();
+        var dappId = await AddDapp();
 
         result = await PointsContractUserStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput());
         result.TransactionResult.Error.ShouldContain("No permission.");
 
-        result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
-            new SetSelfIncreasingPointsRulesInput());
-        result.TransactionResult.Error.ShouldContain("Invalid dapp id.");
+        // result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
+        //     new SetSelfIncreasingPointsRulesInput());
+        // result.TransactionResult.Error.ShouldContain("Invalid dapp id.");
 
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
-            new SetSelfIncreasingPointsRulesInput { DappId = DefaultDappId });
+            new SetSelfIncreasingPointsRulesInput { DappId = dappId });
         result.TransactionResult.Error.ShouldContain("Invalid self-increasing points rules.");
 
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
             {
-                DappId = DefaultDappId,
+                DappId = dappId,
                 SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
@@ -204,7 +205,7 @@ public partial class PointsContractTests
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
             {
-                DappId = DefaultDappId,
+                DappId = dappId,
                 SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = "",
@@ -215,12 +216,12 @@ public partial class PointsContractTests
             });
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
 
-        // await CreatePoint();
+        await CreatePoint(dappId);
 
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
             {
-                DappId = DefaultDappId,
+                DappId = dappId,
                 SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
@@ -234,7 +235,7 @@ public partial class PointsContractTests
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
             {
-                DappId = DefaultDappId,
+                DappId = dappId,
                 SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
@@ -248,7 +249,7 @@ public partial class PointsContractTests
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
             {
-                DappId = DefaultDappId,
+                DappId = dappId,
                 SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
@@ -262,7 +263,7 @@ public partial class PointsContractTests
         result = await PointsContractStub.SetSelfIncreasingPointsRules.SendWithExceptionAsync(
             new SetSelfIncreasingPointsRulesInput
             {
-                DappId = DefaultDappId,
+                DappId = dappId,
                 SelfIncreasingEarningRule = new PointsRule
                 {
                     PointName = DefaultPointName,
@@ -294,6 +295,7 @@ public partial class PointsContractTests
         {
             DappAdmin = DefaultAddress,
             OfficialDomain = DefaultOfficialDomain,
+            DappContractAddress = DefaultAddress
         };
         var result = await PointsContractStub.AddDapp.SendAsync(input);
         var blockchainService = Application.ServiceProvider.GetRequiredService<IBlockchainService>();

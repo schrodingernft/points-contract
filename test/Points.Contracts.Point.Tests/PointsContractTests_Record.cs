@@ -24,7 +24,7 @@ public partial class PointsContractTests
         var result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
         result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
@@ -38,7 +38,7 @@ public partial class PointsContractTests
         result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain1,
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = DefaultAddress
         });
         result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
@@ -50,7 +50,7 @@ public partial class PointsContractTests
 
         var getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = DefaultAddress,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.Inviter,
@@ -61,7 +61,7 @@ public partial class PointsContractTests
 
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = DefaultAddress,
             Domain = domain1,
             IncomeSourceType = IncomeSourceType.Kol,
@@ -83,14 +83,14 @@ public partial class PointsContractTests
         var result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = string.Join(".", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 10)),
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
 
         result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
@@ -106,21 +106,21 @@ public partial class PointsContractTests
         result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
-            DappId = DefaultDappId,
+            DappId = dappId,
         });
         result.TransactionResult.Error.ShouldContain("Invalid invitee.");
 
         await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
 
         result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Domain has Exist.");
@@ -130,7 +130,7 @@ public partial class PointsContractTests
             await PointsContractUser2Stub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
             {
                 Domain = $"user{i}.com",
-                DappId = DefaultDappId,
+                DappId = dappId,
                 Invitee = UserAddress
             });
         }
@@ -138,7 +138,7 @@ public partial class PointsContractTests
         result = await PointsContractUser2Stub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = "exceedMaxApply.com",
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Apply count exceed the limit.");
@@ -157,7 +157,7 @@ public partial class PointsContractTests
         // official domain
         var result = await PointsContractStub.Join.SendAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = DefaultOfficialDomain,
             Registrant = DefaultAddress
         });
@@ -166,7 +166,7 @@ public partial class PointsContractTests
         BlockTimeProvider.SetBlockTime(currentBlockTime.AddSeconds(5));
         var getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = DefaultAddress,
             Domain = DefaultOfficialDomain,
             IncomeSourceType = IncomeSourceType.User,
@@ -176,7 +176,7 @@ public partial class PointsContractTests
         getBalanceResult.Balance.ShouldBe(20000000); // join + 20000000, increasing + 10000000*5
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = DefaultAddress,
             Domain = DefaultOfficialDomain,
             IncomeSourceType = IncomeSourceType.User,
@@ -190,12 +190,12 @@ public partial class PointsContractTests
         await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
         {
             Domain = domain,
-            DappId = DefaultDappId,
+            DappId = dappId,
             Invitee = UserAddress
         });
         result = await PointsContractStub.Join.SendAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = domain,
             Registrant = User2Address
         });
@@ -206,7 +206,7 @@ public partial class PointsContractTests
         // user balance
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = User2Address,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.User,
@@ -216,7 +216,7 @@ public partial class PointsContractTests
         getBalanceResult.Balance.ShouldBe(20000000); // join + 20000000, increasing + 10000000*5
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = User2Address,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.User,
@@ -228,7 +228,7 @@ public partial class PointsContractTests
         // invitee balance
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = UserAddress,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.Kol,
@@ -238,7 +238,7 @@ public partial class PointsContractTests
         getBalanceResult.Balance.ShouldBe(2000000); // join + 20000000, increasing + 10000000*5
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = UserAddress,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.Kol,
@@ -250,7 +250,7 @@ public partial class PointsContractTests
         // inviter balance
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = DefaultAddress,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.Inviter,
@@ -260,7 +260,7 @@ public partial class PointsContractTests
         getBalanceResult.Balance.ShouldBe(200000); // join + 20000000, increasing + 10000000*5
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Address = DefaultAddress,
             Domain = domain,
             IncomeSourceType = IncomeSourceType.Inviter,
@@ -282,7 +282,7 @@ public partial class PointsContractTests
         // not dapp admin
         var result = await PointsContractUserStub.Join.SendWithExceptionAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = DefaultOfficialDomain,
             Registrant = DefaultAddress
         });
@@ -291,7 +291,7 @@ public partial class PointsContractTests
         // register is null
         result = await PointsContractStub.Join.SendWithExceptionAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = DefaultOfficialDomain,
         });
         result.TransactionResult.Error.ShouldContain("Invalid registrant address.");
@@ -299,14 +299,14 @@ public partial class PointsContractTests
         // invalid domain 
         result = await PointsContractStub.Join.SendWithExceptionAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = "",
             Registrant = DefaultAddress
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
         result = await PointsContractStub.Join.SendWithExceptionAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = string.Join(".", Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz", 10)),
             Registrant = DefaultAddress
         });
@@ -315,7 +315,7 @@ public partial class PointsContractTests
         // join not exist domain
         result = await PointsContractStub.Join.SendWithExceptionAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = "not-exist.com",
             Registrant = DefaultAddress
         });
@@ -324,13 +324,13 @@ public partial class PointsContractTests
         // register twice
         await PointsContractStub.Join.SendAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = DefaultOfficialDomain,
             Registrant = DefaultAddress
         });
         result = await PointsContractStub.Join.SendWithExceptionAsync(new JoinInput
         {
-            DappId = DefaultDappId,
+            DappId = dappId,
             Domain = DefaultOfficialDomain,
             Registrant = DefaultAddress
         });
