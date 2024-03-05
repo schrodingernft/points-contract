@@ -20,7 +20,7 @@ public partial class PointsContract
         var domain = input.Domain;
         AssertDomainFormat(domain);
         Assert(string.IsNullOrEmpty(State.RegistrationMap[dappId][registrant]),
-            "Users cannot bind two domains on the same Dapp.");
+            "A dapp can only be registered once.");
         State.RegistrationMap[dappId][registrant] = domain;
 
         // The user registered using an unofficial domain link.
@@ -28,13 +28,15 @@ public partial class PointsContract
         {
             var relationship = State.DomainOperatorRelationshipMap[domain];
             Assert(relationship != null, "Not exist domain.");
+            // All points actions will be settled by self-increasing points.
+            SettlingSelfIncreasingPoints(dappId, registrant);
 
             // The number of user will only be calculated during the registration process
             State.Relationships[dappId][relationship.Invitee][domain] += 1;
             if (relationship.Inviter != null) State.InviterRelationships[dappId][relationship.Inviter] += 1;
         }
 
-        SettlingPoints(dappId, input.Registrant, "join");
+        SettlingPoints(dappId, registrant, "join");
         // init first join time
         State.LastBillingUpdateTimes[dappId][registrant][IncomeSourceType.User] = Context.CurrentBlockTime;
 
@@ -116,9 +118,6 @@ public partial class PointsContract
 
     private void SettlingPoints(Hash dappId, Address user, string actionName)
     {
-        // All points actions will be settled by self-increasing points.
-        SettlingSelfIncreasingPoints(dappId, user);
-
         // Calculate instantaneous integral action.
         var pointsRules = State.DappInfos[dappId].DappsEarningRules;
         var rule = pointsRules.EarningRules.FirstOrDefault(t => t.ActionName == actionName);
@@ -202,8 +201,8 @@ public partial class PointsContract
         if (lastBlockTimestamp != null)
         {
             var lastBlockTime = lastBlockTimestamp.Seconds;
-            var waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type, lastBlockTime,
-                Context.CurrentBlockTime.Seconds, domain, points);
+            var waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
+                Context.CurrentBlockTime.Seconds, lastBlockTime, domain, points);
 
             UpdatePointsPool(address, domain, type, pointName, waitingSettledPoints);
         }

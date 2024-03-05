@@ -25,7 +25,6 @@ public partial class PointsContractTests : PointsContractTestBase
         result.TransactionResult.Error.ShouldContain("Already initialized.");
     }
 
-
     [Fact]
     public async Task InitializeTests_Fail()
     {

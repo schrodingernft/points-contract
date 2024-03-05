@@ -334,6 +334,6 @@ public partial class PointsContractTests
             Domain = DefaultOfficialDomain,
             Registrant = DefaultAddress
         });
-        result.TransactionResult.Error.ShouldContain("Users cannot bind two domains on the same Dapp.");
+        result.TransactionResult.Error.ShouldContain("A dapp can only be registered once.");
     }
 }
