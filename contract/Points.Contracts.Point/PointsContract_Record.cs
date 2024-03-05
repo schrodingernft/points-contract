@@ -99,6 +99,7 @@ public partial class PointsContract
 
         State.ApplyDomainCount[Context.Sender][input.DappId] =
             State.ApplyDomainCount[Context.Sender][input.DappId].Add(1);
+        Context.Fire(pointsDetails);
         Context.Fire(new InviterApplied
         {
             Domain = input.Domain,
