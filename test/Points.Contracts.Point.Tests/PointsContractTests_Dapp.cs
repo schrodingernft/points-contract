@@ -162,7 +162,7 @@ public partial class PointsContractTests
             {
                 DappId = DefaultDappId
             });
-        getResult.Rule.PointName.ShouldBe(JoinPointName);
+        getResult.Rule.PointName.ShouldBe(SelfIncreasingPointName);
         getResult.Rule.UserPoints.ShouldBe(10000000);
         getResult.Rule.KolPoints.ShouldBe(1000000);
         getResult.Rule.InviterPoints.ShouldBe(100000);
@@ -282,7 +282,7 @@ public partial class PointsContractTests
             DappId = DefaultDappId,
             SelfIncreasingEarningRule = new EarningRule
             {
-                PointName = JoinPointName,
+                PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
                 KolPoints = 1000000,
                 InviterPoints = 100000

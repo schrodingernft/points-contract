@@ -173,7 +173,17 @@ public partial class PointsContractTests
             PointName = JoinPointName
         });
         getBalanceResult.PointName.ShouldBe(JoinPointName);
-        getBalanceResult.Balance.ShouldBe(20000000 + 5 * 10000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult.Balance.ShouldBe(20000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
+        {
+            DappId = DefaultDappId,
+            Address = DefaultAddress,
+            Domain = DefaultOfficialDomain,
+            IncomeSourceType = IncomeSourceType.User,
+            PointName = SelfIncreasingPointName
+        });
+        getBalanceResult.PointName.ShouldBe(SelfIncreasingPointName);
+        getBalanceResult.Balance.ShouldBe(5 * 10000000); // join + 20000000, increasing + 10000000*5
 
         // create domain
         const string domain = "abc.com";
@@ -203,7 +213,17 @@ public partial class PointsContractTests
             PointName = JoinPointName
         });
         getBalanceResult.PointName.ShouldBe(JoinPointName);
-        getBalanceResult.Balance.ShouldBe(20000000 + 5 * 10000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult.Balance.ShouldBe(20000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
+        {
+            DappId = DefaultDappId,
+            Address = User2Address,
+            Domain = domain,
+            IncomeSourceType = IncomeSourceType.User,
+            PointName = SelfIncreasingPointName
+        });
+        getBalanceResult.PointName.ShouldBe(SelfIncreasingPointName);
+        getBalanceResult.Balance.ShouldBe(5 * 10000000); // join + 20000000, increasing + 10000000*5
 
         // invitee balance
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
@@ -215,7 +235,17 @@ public partial class PointsContractTests
             PointName = JoinPointName
         });
         getBalanceResult.PointName.ShouldBe(JoinPointName);
-        getBalanceResult.Balance.ShouldBe(2000000 + 5 * 1000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult.Balance.ShouldBe(2000000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
+        {
+            DappId = DefaultDappId,
+            Address = UserAddress,
+            Domain = domain,
+            IncomeSourceType = IncomeSourceType.Kol,
+            PointName = SelfIncreasingPointName
+        });
+        getBalanceResult.PointName.ShouldBe(SelfIncreasingPointName);
+        getBalanceResult.Balance.ShouldBe(5 * 1000000); // join + 20000000, increasing + 10000000*5
 
         // inviter balance
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
@@ -227,7 +257,17 @@ public partial class PointsContractTests
             PointName = JoinPointName
         });
         getBalanceResult.PointName.ShouldBe(JoinPointName);
-        getBalanceResult.Balance.ShouldBe(200000 + 5 * 100000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult.Balance.ShouldBe(200000); // join + 20000000, increasing + 10000000*5
+        getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
+        {
+            DappId = DefaultDappId,
+            Address = DefaultAddress,
+            Domain = domain,
+            IncomeSourceType = IncomeSourceType.Inviter,
+            PointName = SelfIncreasingPointName
+        });
+        getBalanceResult.PointName.ShouldBe(SelfIncreasingPointName);
+        getBalanceResult.Balance.ShouldBe(5 * 100000); // join + 20000000, increasing + 10000000*5
     }
 
     [Fact]

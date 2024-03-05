@@ -208,5 +208,7 @@ public partial class PointsContractTests : PointsContractTestBase
             { TokenName = DefaultPointName, Decimals = 8 });
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
             { TokenName = JoinPointName, Decimals = 8 });
+        await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
+            { TokenName = SelfIncreasingPointName, Decimals = 8 });
     }
 }

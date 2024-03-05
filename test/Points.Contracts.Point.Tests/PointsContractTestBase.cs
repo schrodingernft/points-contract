@@ -34,6 +34,7 @@ public class PointsContractTestBase : DAppContractTestBase<PointsContractTestMod
     protected const string DefaultPointName = "APPLY-0";
     protected const string DefaultActionName = "apply";
     protected const string JoinPointName = "JOIN-0";
+    protected const string SelfIncreasingPointName = "INCREASE-0";
     protected const string JoinActionName = "join";
     // protected const string DefaultDappName = "ABC";
     protected const string DefaultOfficialDomain = "official.com";

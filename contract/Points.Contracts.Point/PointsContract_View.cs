@@ -29,20 +29,28 @@ public partial class PointsContract
 
         var currentPoints = GeneratePointsState(address, domain, type, pointName);
         var balance = currentPoints.Balance;
-        var rule = State.SelfIncreasingPointsRules[dappId];
-        var points = type switch
-        {
-            IncomeSourceType.User => rule.UserPoints,
-            IncomeSourceType.Kol => rule.KolPoints,
-            IncomeSourceType.Inviter => rule.InviterPoints,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
-        };
 
         var userLastBillingUpdateTimes = State.LastBillingUpdateTimes[dappId]?[address]?[type];
-        var increasingPoints = userLastBillingUpdateTimes != null
-            ? CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type, Context.CurrentBlockTime.Seconds,
-                userLastBillingUpdateTimes.Seconds, domain, points)
-            : 0;
+        long increasingPoints = 0;
+
+        var rule = State.SelfIncreasingPointsRules[dappId];
+        if (pointName == rule?.PointName)
+        {
+            var points = type switch
+            {
+                IncomeSourceType.User => rule.UserPoints,
+                IncomeSourceType.Kol => rule.KolPoints,
+                IncomeSourceType.Inviter => rule.InviterPoints,
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
+            };
+
+            // An account that has not been bound to a domain has no update time.
+            if (userLastBillingUpdateTimes != null)
+            {
+                increasingPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
+                    Context.CurrentBlockTime.Seconds, userLastBillingUpdateTimes.Seconds, domain, points);
+            }
+        }
 
         return new GetPointsBalanceOutput
         {
