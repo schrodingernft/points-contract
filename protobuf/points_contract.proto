@@ -79,10 +79,6 @@ enum IncomeSourceType {
     INVITER = 2;
 }
 
-message PointsUpdated {
-    option (aelf.is_event) = true;
-    PointsStateList point_state_list = 1;
-}
 message PointsStateList {
     repeated PointsState point_states = 1;
 }

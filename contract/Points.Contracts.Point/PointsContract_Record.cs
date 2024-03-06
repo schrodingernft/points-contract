@@ -142,18 +142,19 @@ public partial class PointsContract
         }
 
         // All points actions will be settled by self-increasing points.
-        var details = SettlingSelfIncreasingPoints(dappId, user, actionName);
+        var details = SettlingSelfIncreasingPoints(dappId, user);
         if (details.PointsDetails.Count > 0)
             pointsDetails.PointsChangedDetails.PointsDetails.AddRange(details.PointsDetails);
         // Points details
         Context.Fire(pointsDetails);
     }
 
-    private PointsChangedDetails SettlingSelfIncreasingPoints(Hash dappId, Address user, string actionName)
+    private PointsChangedDetails SettlingSelfIncreasingPoints(Hash dappId, Address user)
     {
         var pointsRule = State.SelfIncreasingPointsRules[dappId];
         Assert(pointsRule != null, "This Dapp has not yet set the rules for self-increasing points");
         var pointName = pointsRule.PointName;
+        var actionName = pointsRule.ActionName;
         var domain = State.RegistrationMap[dappId][user];
         var pointsDetails = new PointsChangedDetails();
 
