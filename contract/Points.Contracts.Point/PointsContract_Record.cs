@@ -163,9 +163,10 @@ public partial class PointsContract
         var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId][user][domain][IncomeSourceType.User];
         if (userLastBillingUpdateTimes != null)
         {
-            UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName, pointsRule.UserPoints, domain);
-            pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
-                IncomeSourceType.User, pointName, pointsRule.UserPoints, dappId));
+            var userIncreasingPoint = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName, pointsRule.UserPoints, domain);
+            if (userIncreasingPoint > 0)
+                pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
+                    IncomeSourceType.User, pointName, userIncreasingPoint, dappId));
         }
 
         // settle invitee
@@ -173,37 +174,41 @@ public partial class PointsContract
 
         var domainRelationship = State.DomainsMap[domain];
         var invitee = domainRelationship.Invitee;
-        UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName, pointsRule.KolPoints, domain);
-        pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-            IncomeSourceType.Kol, pointName, pointsRule.KolPoints, dappId));
+        var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName, pointsRule.KolPoints, domain);
+        if(kolIncreasingPoint > 0 )
+            pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
+                IncomeSourceType.Kol, pointName, kolIncreasingPoint, dappId));
 
         // settle inviter
         // kol registered a domain for himself but there was no inviter
         var inviter = domainRelationship.Inviter;
         if (inviter == null) return pointsDetails;
 
-        UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
+        var inviterIncreasingPoint = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
             pointsRule.InviterPoints, domain);
-        pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-            IncomeSourceType.Inviter, pointName, pointsRule.InviterPoints, dappId));
+        if(inviterIncreasingPoint > 0)
+            pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
+                IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
 
         return pointsDetails;
     }
 
-    private void UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
+    private long UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
         long points, string domain)
     {
         var lastBlockTimestamp = State.LastPointsUpdateTimes[dappId][address][domain][type];
+        long waitingSettledPoints = 0;
         if (lastBlockTimestamp != null)
         {
             var lastBlockTime = lastBlockTimestamp.Seconds;
-            var waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
+            waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
                 Context.CurrentBlockTime.Seconds, lastBlockTime, domain, points);
 
             UpdatePointsBalance(address, domain, type, pointName, waitingSettledPoints);
         }
 
         State.LastPointsUpdateTimes[dappId][address][domain][type] = Context.CurrentBlockTime;
+        return waitingSettledPoints;
     }
 
     private long CalculateWaitingSettledSelfIncreasingPoints(Hash dappId, Address address, IncomeSourceType type,
