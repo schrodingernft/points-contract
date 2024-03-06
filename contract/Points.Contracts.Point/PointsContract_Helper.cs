@@ -23,7 +23,7 @@ public partial class PointsContract
 
     private void AssertDomainFormat(string domain)
     {
-        var invalidChars = new List<char> { '<', '>', ':', '"', '/', '|', '?', '*' }; // 定义非法字符
+        var invalidChars = new List<char> { '<', '>', ':', '"', '/', '|', '?', '*' };
         Assert(domain.Length is > 0 and <= PointsContractConstants.DomainNameLength &&
                !(domain.StartsWith(".") || domain.EndsWith(".")) &&
                !domain.Any(c => invalidChars.Contains(c) || c > 126 || char.IsUpper(c)), "Invalid domain.");
