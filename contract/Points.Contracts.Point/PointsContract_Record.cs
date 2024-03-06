@@ -79,7 +79,7 @@ public partial class PointsContract
             Inviter = inviter != invitee ? inviter : null
         };
 
-        const string actionName = "Apply";
+        const string actionName = nameof(ApplyToBeAdvocate);
         var rule = State.DappInfos[dappId].DappsPointRules.PointsRules
             .FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for apply.");
