@@ -64,7 +64,7 @@ public partial class PointsContract
     {
         AssertInitialized();
         AssertDappAdmin(input.DappId);
-        Assert(State.SelfIncreasingPointsRules[input.DappId] == null, "Self-increasing points rules already set.");
+        // Assert(State.SelfIncreasingPointsRules[input.DappId] == null, "Self-increasing points rules already set.");
 
         var rule = input.SelfIncreasingPointsRule;
         Assert(rule != null, "Invalid self-increasing points rules.");
