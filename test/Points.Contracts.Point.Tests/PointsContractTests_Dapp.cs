@@ -181,6 +181,7 @@ public partial class PointsContractTests
             DappId = dappId,
             SelfIncreasingPointsRule = new PointsRule
             {
+                ActionName = SelfIncreaseActionName,
                 PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
                 KolPoints = 1000000,
