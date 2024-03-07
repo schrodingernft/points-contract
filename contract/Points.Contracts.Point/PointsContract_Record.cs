@@ -163,10 +163,10 @@ public partial class PointsContract
         var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId][user][domain][IncomeSourceType.User];
         if (userLastBillingUpdateTimes != null)
         {
-            var userIncreasingPoint = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName, pointsRule.UserPoints, domain);
-            if (userIncreasingPoint > 0)
-                pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
-                    IncomeSourceType.User, pointName, userIncreasingPoint, dappId));
+            var userIncreasingPoint = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName,
+                pointsRule.UserPoints, domain);
+            pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
+                IncomeSourceType.User, pointName, userIncreasingPoint, dappId));
         }
 
         // settle invitee
@@ -174,10 +174,10 @@ public partial class PointsContract
 
         var domainRelationship = State.DomainsMap[domain];
         var invitee = domainRelationship.Invitee;
-        var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName, pointsRule.KolPoints, domain);
-        if(kolIncreasingPoint > 0 )
-            pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-                IncomeSourceType.Kol, pointName, kolIncreasingPoint, dappId));
+        var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName,
+            pointsRule.KolPoints, domain);
+        pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
+            IncomeSourceType.Kol, pointName, kolIncreasingPoint, dappId));
 
         // settle inviter
         // kol registered a domain for himself but there was no inviter
@@ -186,9 +186,8 @@ public partial class PointsContract
 
         var inviterIncreasingPoint = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
             pointsRule.InviterPoints, domain);
-        if(inviterIncreasingPoint > 0)
-            pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-                IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
+        pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
+            IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
 
         return pointsDetails;
     }
