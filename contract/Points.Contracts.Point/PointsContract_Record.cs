@@ -43,10 +43,6 @@ public partial class PointsContract
             }
         }
 
-        // SettlingPoints(dappId, registrant, nameof(Join));
-        // init first join time
-        State.LastPointsUpdateTimes[dappId][registrant][domain][IncomeSourceType.User] = Context.CurrentBlockTime;
-
         Context.Fire(new Joined
         {
             DappId = dappId,
@@ -160,14 +156,10 @@ public partial class PointsContract
 
         // settle user
         // Only registered users can calculate self-increasing points, and only registered users have settlement time.
-        var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId][user][domain][IncomeSourceType.User];
-        if (userLastBillingUpdateTimes != null)
-        {
-            var userIncreasingPoint = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName,
-                pointsRule.UserPoints, domain);
-            pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
-                IncomeSourceType.User, pointName, userIncreasingPoint, dappId));
-        }
+        var userIncreasingPoint = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName,
+            pointsRule.UserPoints, domain);
+        pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName, IncomeSourceType.User, pointName,
+            userIncreasingPoint, dappId));
 
         // settle invitee
         if (domain == State.DappInfos[dappId].OfficialDomain) return pointsDetails;
