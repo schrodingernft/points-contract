@@ -23,7 +23,7 @@ service PointsContract {
   rpc SetMaxApplyDomainCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
   
   rpc Join(JoinInput) returns (google.protobuf.Empty) {}
-  // rpc Settle(SettleInput) returns (google.protobuf.Empty) {}
+  rpc Settle(SettleInput) returns (google.protobuf.Empty) {}
   rpc GetPointsBalance(GetPointsBalanceInput) returns (GetPointsBalanceOutput) { option (aelf.is_view) = true; }
   // rpc SetDappInformation(SetDappInformationInput) returns (google.protobuf.Empty) {}
   rpc AddDapp(AddDappInput) returns (google.protobuf.Empty) {}

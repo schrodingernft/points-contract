@@ -238,4 +238,18 @@ public partial class PointsContract
             Balance = State.PointsBalance[address][domain][type][pointName]
         };
     }
+    public override Empty Settle(SettleInput input) 
+    {
+        AssertInitialized();
+        var dappId = input.DappId;
+        AssertDappAdmin(dappId);
+    
+        var userAddress = input.UserAddress;
+        Assert(userAddress.Value != null, "User address cannot be null");
+        Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userAddress]), "User has not registered yet");
+    
+        SettlingPoints(dappId, userAddress, input.ActionName);
+    
+        return new Empty();
+    }
 }
