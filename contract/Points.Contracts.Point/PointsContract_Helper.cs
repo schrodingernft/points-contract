@@ -24,8 +24,10 @@ public partial class PointsContract
     private void AssertDomainFormat(string domain)
     {
         var invalidChars = new List<char> { '<', '>', ':', '"', '/', '|', '?', '*' };
+        var alias = domain.Split('.');
         Assert(domain.Length is > 0 and <= PointsContractConstants.DomainNameLength &&
                !(domain.StartsWith(".") || domain.EndsWith(".")) &&
-               !domain.Any(c => invalidChars.Contains(c) || c > 126 || char.IsUpper(c)), "Invalid domain.");
+               !domain.Any(c => invalidChars.Contains(c) || c > 126 || char.IsUpper(c)) &&
+               alias.Length is 3 or 2 && alias.All(t => !string.IsNullOrEmpty(t)), "Invalid domain.");
     }
 }

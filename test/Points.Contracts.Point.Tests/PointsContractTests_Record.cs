@@ -95,7 +95,7 @@ public partial class PointsContractTests
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
-        
+
         result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = ".abc.com",
@@ -119,7 +119,15 @@ public partial class PointsContractTests
             Invitee = UserAddress
         });
         result.TransactionResult.Error.ShouldContain("Invalid domain.");
-        
+
+        result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
+            Domain = "a.b.c.com",
+            DappId = dappId,
+            Invitee = UserAddress
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid domain.");
+
         result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
         {
             Domain = "*.com",
