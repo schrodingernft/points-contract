@@ -66,8 +66,8 @@ public partial class PointsContractTests
             });
         getResult.Rule.PointName.ShouldBe(SelfIncreasingPointName);
         getResult.Rule.UserPoints.ShouldBe(10000000);
-        getResult.Rule.KolPoints.ShouldBe(1000000);
-        getResult.Rule.InviterPoints.ShouldBe(100000);
+        getResult.Rule.KolPointsPercent.ShouldBe(1000000);
+        getResult.Rule.InviterPointsPercent.ShouldBe(100000);
     }
 
     [Fact]
@@ -96,8 +96,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
-                    InviterPoints = 100000
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
@@ -110,8 +110,8 @@ public partial class PointsContractTests
                 {
                     PointName = "",
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
-                    InviterPoints = 100000
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
@@ -126,8 +126,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = -1,
-                    KolPoints = 1000000,
-                    InviterPoints = 100000
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -140,8 +140,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = -1,
-                    InviterPoints = 100000
+                    KolPointsPercent = -1,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -154,8 +154,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
-                    InviterPoints = -1
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = -1
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -168,7 +168,7 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
+                    KolPointsPercent = 1000000,
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -184,8 +184,8 @@ public partial class PointsContractTests
                 ActionName = SelfIncreaseActionName,
                 PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
-                KolPoints = 1000000,
-                InviterPoints = 100000
+                KolPointsPercent = 1000000,
+                InviterPointsPercent = 100000
             }
         });
     }
@@ -204,16 +204,16 @@ public partial class PointsContractTests
                         ActionName = DefaultActionName,
                         PointName = DefaultPointName,
                         UserPoints = 10000000,
-                        KolPoints = 1000000,
-                        InviterPoints = 100000
+                        KolPointsPercent = 1000000,
+                        InviterPointsPercent = 100000
                     },
                     new PointsRule
                     {
                         ActionName = JoinActionName,
                         PointName = JoinPointName,
                         UserPoints = 20000000,
-                        KolPoints = 2000000,
-                        InviterPoints = 200000
+                        KolPointsPercent = 2000000,
+                        InviterPointsPercent = 200000
                     }
                 }
             }

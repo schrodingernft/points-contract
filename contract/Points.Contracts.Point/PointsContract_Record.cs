@@ -276,14 +276,14 @@ public partial class PointsContract
         CheckSettleParam(input.DappId, input.ActionName);
         var dappId = input.DappId;
         Assert(
-            input.UserPointList.Count > 0 &&
-            input.UserPointList.Count <= PointsContractConstants.MaxBatchSettleListCount, "Invalid user point list.");
-        foreach (var userPoint in input.UserPointList)
+            input.UserPointsList.Count > 0 &&
+            input.UserPointsList.Count <= PointsContractConstants.MaxBatchSettleListCount, "Invalid user point list.");
+        foreach (var userPoints in input.UserPointsList)
         {
-            Assert(userPoint.UserAddress.Value != null, "User address cannot be null");
-            Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userPoint.UserAddress]),
+            Assert(userPoints.UserAddress.Value != null, "User address cannot be null");
+            Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userPoints.UserAddress]),
                 "User has not registered yet");
-            SettlingPoints(dappId, userPoint.UserAddress, input.ActionName, userPoint.UserPoints);
+            SettlingPoints(dappId, userPoints.UserAddress, input.ActionName, userPoints.UserPoints_);
         }
 
         return new Empty();
