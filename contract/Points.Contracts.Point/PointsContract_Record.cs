@@ -80,17 +80,17 @@ public partial class PointsContract
             .FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for apply.");
         var pointName = rule.PointName;
-        UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, rule.KolPoints);
+        UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, rule.KolPointsPercent);
 
         var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
         pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-            IncomeSourceType.Kol, pointName, rule.KolPoints, dappId));
+            IncomeSourceType.Kol, pointName, rule.KolPointsPercent, dappId));
 
         if (inviter != invitee)
         {
-            UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, rule.InviterPoints);
+            UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, rule.InviterPointsPercent);
             pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-                IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
+                IncomeSourceType.Inviter, pointName, rule.InviterPointsPercent, dappId));
         }
 
         State.ApplyDomainCount[Context.Sender][input.DappId] =
@@ -106,7 +106,7 @@ public partial class PointsContract
         return new Empty();
     }
 
-    private void SettlingPoints(Hash dappId, Address user, string actionName)
+    private void SettlingPoints(Hash dappId, Address user, string actionName, long sourceUserPoints = 0)
     {
         var pointsRules = State.DappInfos[dappId].DappsPointRules;
         var rule = pointsRules.PointsRules.FirstOrDefault(t => t.ActionName == actionName);
@@ -115,25 +115,27 @@ public partial class PointsContract
         var pointName = rule.PointName;
         var domain = State.RegistrationMap[dappId][user];
         var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
-        UpdatePointsBalance(user, domain, IncomeSourceType.User, pointName, rule.UserPoints);
-        pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
-            IncomeSourceType.User, pointName, rule.UserPoints, dappId));
 
+        var userPoints = GetPoints(rule, sourceUserPoints, out var kolPoints, out var inviterPoints);
+        UpdatePointsBalance(user, domain, IncomeSourceType.User, pointName, userPoints);
+
+        pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
+            IncomeSourceType.User, pointName, userPoints, dappId));
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
             var domainRelationship = State.DomainsMap[domain];
             var invitee = domainRelationship.Invitee;
 
-            UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, pointName, rule.KolPoints);
+            UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, pointName, kolPoints);
             pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-                IncomeSourceType.Kol, pointName, rule.KolPoints, dappId));
+                IncomeSourceType.Kol, pointName, kolPoints, dappId));
 
             var inviter = domainRelationship.Inviter;
             if (inviter != null)
             {
-                UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, pointName, rule.InviterPoints);
+                UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, pointName, inviterPoints);
                 pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-                    IncomeSourceType.Inviter, pointName, rule.InviterPoints, dappId));
+                    IncomeSourceType.Inviter, pointName, inviterPoints, dappId));
             }
         }
 
@@ -143,6 +145,24 @@ public partial class PointsContract
             pointsDetails.PointsChangedDetails.PointsDetails.AddRange(details.PointsDetails);
         // Points details
         Context.Fire(pointsDetails);
+    }
+
+    private long GetPoints(PointsRule rule, long sourceUserPoints, out long kolPoints,
+        out long inviterPoints)
+    {
+        if (rule.EnableProportionalCalculation)
+        {
+            Assert(sourceUserPoints > 0, "Invalid user points.");
+        }
+
+        var userPoints = rule.EnableProportionalCalculation ? sourceUserPoints : rule.UserPoints;
+        kolPoints = rule.EnableProportionalCalculation
+            ? userPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator)
+            : rule.KolPointsPercent;
+        inviterPoints = rule.EnableProportionalCalculation
+            ? userPoints.Mul(rule.InviterPointsPercent).Div(PointsContractConstants.Denominator)
+            : rule.InviterPointsPercent;
+        return userPoints;
     }
 
     private PointsChangedDetails SettlingSelfIncreasingPoints(Hash dappId, Address user)
@@ -167,7 +187,7 @@ public partial class PointsContract
         var domainRelationship = State.DomainsMap[domain];
         var invitee = domainRelationship.Invitee;
         var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName,
-            pointsRule.KolPoints, domain);
+            pointsRule.KolPointsPercent, domain);
         pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
             IncomeSourceType.Kol, pointName, kolIncreasingPoint, dappId));
 
@@ -177,7 +197,7 @@ public partial class PointsContract
         if (inviter == null) return pointsDetails;
 
         var inviterIncreasingPoint = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
-            pointsRule.InviterPoints, domain);
+            pointsRule.InviterPointsPercent, domain);
         pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
             IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
 
@@ -238,18 +258,42 @@ public partial class PointsContract
             Balance = State.PointsBalance[address][domain][type][pointName]
         };
     }
-    public override Empty Settle(SettleInput input) 
+
+    public override Empty Settle(SettleInput input)
     {
-        AssertInitialized();
+        CheckSettleParam(input.DappId, input.ActionName);
         var dappId = input.DappId;
-        AssertDappAdmin(dappId);
-    
         var userAddress = input.UserAddress;
         Assert(userAddress.Value != null, "User address cannot be null");
         Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userAddress]), "User has not registered yet");
-    
-        SettlingPoints(dappId, userAddress, input.ActionName);
-    
+        SettlingPoints(dappId, userAddress, input.ActionName, input.UserPoints);
+
         return new Empty();
+    }
+
+    public override Empty BatchSettle(BatchSettleInput input)
+    {
+        CheckSettleParam(input.DappId, input.ActionName);
+        var dappId = input.DappId;
+        Assert(
+            input.UserPointList.Count > 0 &&
+            input.UserPointList.Count <= PointsContractConstants.MaxBatchSettleListCount, "Invalid user point list.");
+        foreach (var userPoint in input.UserPointList)
+        {
+            Assert(userPoint.UserAddress.Value != null, "User address cannot be null");
+            Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userPoint.UserAddress]),
+                "User has not registered yet");
+            SettlingPoints(dappId, userPoint.UserAddress, input.ActionName, userPoint.UserPoints);
+        }
+
+        return new Empty();
+    }
+
+    private void CheckSettleParam(Hash dappId, string actionName)
+    {
+        AssertInitialized();
+        AssertDappContractAddress(dappId);
+        Assert(IsStringValid(actionName), "Invalid action name.");
+        Assert(IsHashValid(dappId), "Invalid dapp id.");
     }
 }

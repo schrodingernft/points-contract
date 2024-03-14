@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using AElf;
 using AElf.Types;
 
 namespace Points.Contracts.Point;
@@ -29,5 +30,15 @@ public partial class PointsContract
                !(domain.StartsWith(".") || domain.EndsWith(".")) &&
                !domain.Any(c => invalidChars.Contains(c) || c > 126 || char.IsUpper(c)) &&
                alias.Length is 3 or 2 && alias.All(t => !string.IsNullOrEmpty(t)), "Invalid domain.");
+    }
+    
+    private bool IsStringValid(string input)
+    {
+        return !string.IsNullOrWhiteSpace(input);
+    }
+    
+    private bool IsHashValid(Hash input)
+    {
+        return input != null && !input.Value.IsNullOrEmpty();
     }
 }

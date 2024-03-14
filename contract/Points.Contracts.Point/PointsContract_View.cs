@@ -37,8 +37,8 @@ public partial class PointsContract
             var points = type switch
             {
                 IncomeSourceType.User => rule.UserPoints,
-                IncomeSourceType.Kol => rule.KolPoints,
-                IncomeSourceType.Inviter => rule.InviterPoints,
+                IncomeSourceType.Kol => rule.KolPointsPercent,
+                IncomeSourceType.Inviter => rule.InviterPointsPercent,
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
             };
 

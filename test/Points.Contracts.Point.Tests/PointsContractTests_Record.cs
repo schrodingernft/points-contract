@@ -389,4 +389,10 @@ public partial class PointsContractTests
         });
         result.TransactionResult.Error.ShouldContain("A dapp can only be registered once.");
     }
+
+    [Fact]
+    public async Task SettleTests()
+    {
+        
+    }
 }

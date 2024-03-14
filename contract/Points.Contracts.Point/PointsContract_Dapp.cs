@@ -43,7 +43,7 @@ public partial class PointsContract
             Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[dappId][rule.PointName] != null,
                 "Wrong points name input.");
             Assert(!string.IsNullOrEmpty(rule.ActionName), "ActionName cannot be empty.");
-            Assert(rule.UserPoints > 0 && rule.KolPoints > 0 && rule.InviterPoints > 0,
+            Assert(rule.UserPoints >= 0 && rule.KolPointsPercent > 0 && rule.InviterPointsPercent > 0,
                 "Points must be greater than 0.");
         }
 
@@ -70,7 +70,7 @@ public partial class PointsContract
         Assert(rule != null, "Invalid self-increasing points rules.");
         Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[input.DappId][rule.PointName] != null,
             "Wrong points name input.");
-        Assert(rule.UserPoints > 0 && rule.KolPoints > 0 && rule.InviterPoints > 0, "Points must be greater than 0.");
+        Assert(rule.UserPoints > 0 && rule.KolPointsPercent > 0 && rule.InviterPointsPercent > 0, "Points must be greater than 0.");
 
         State.SelfIncreasingPointsRules[input.DappId] = rule;
 
@@ -79,8 +79,8 @@ public partial class PointsContract
             DappId = input.DappId,
             PointName = rule.PointName,
             UserPoints = rule.UserPoints,
-            KolPoints = rule.KolPoints,
-            InviterPoints = rule.InviterPoints,
+            KolPoints = rule.KolPointsPercent,
+            InviterPoints = rule.InviterPointsPercent,
             Frequency = input.Frequency
         });
         return new Empty();
