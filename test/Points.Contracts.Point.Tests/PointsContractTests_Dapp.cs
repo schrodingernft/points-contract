@@ -66,8 +66,8 @@ public partial class PointsContractTests
             });
         getResult.Rule.PointName.ShouldBe(SelfIncreasingPointName);
         getResult.Rule.UserPoints.ShouldBe(10000000);
-        getResult.Rule.KolPointsPercent.ShouldBe(1000);
-        getResult.Rule.InviterPointsPercent.ShouldBe(100);
+        getResult.Rule.KolPointsPercent.ShouldBe(1000000);
+        getResult.Rule.InviterPointsPercent.ShouldBe(100000);
     }
 
     [Fact]
@@ -184,8 +184,8 @@ public partial class PointsContractTests
                 ActionName = SelfIncreaseActionName,
                 PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
-                KolPointsPercent = 1000,
-                InviterPointsPercent = 100
+                KolPointsPercent = 1000000,
+                InviterPointsPercent = 100000
             }
         });
     }
@@ -204,16 +204,16 @@ public partial class PointsContractTests
                         ActionName = DefaultActionName,
                         PointName = DefaultPointName,
                         UserPoints = 10000000,
-                        KolPointsPercent = 1000,
-                        InviterPointsPercent = 100
+                        KolPointsPercent = 1000000,
+                        InviterPointsPercent = 100000
                     },
                     new PointsRule
                     {
                         ActionName = JoinActionName,
                         PointName = JoinPointName,
                         UserPoints = 20000000,
-                        KolPointsPercent = 1000,
-                        InviterPointsPercent = 100
+                        KolPointsPercent = 2000000,
+                        InviterPointsPercent = 200000
                     }
                 }
             }

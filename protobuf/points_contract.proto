@@ -73,6 +73,7 @@ message PointsRule {
     int64 user_points = 3;
     int64 kol_points_percent = 4;
     int64 inviter_points_percent = 5;
+    bool enable_proportional_calculation = 6;
 }
 
 enum IncomeSourceType {
@@ -187,9 +188,10 @@ message SelfIncreasingPointsRulesChanged {
     aelf.Hash dapp_id = 1;
     string point_name = 2;
     int64 user_points = 3; 
-    int64 kol_points = 4; 
-    int64 inviter_points = 5; 
+    int64 kol_points_percent = 4; 
+    int64 inviter_points_percent = 5; 
     int32 frequency = 6;
+    bool enable_proportional_calculation = 7;
 }
 
 message GetSelfIncreasingPointsRuleInput {

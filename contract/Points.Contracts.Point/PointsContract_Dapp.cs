@@ -79,8 +79,8 @@ public partial class PointsContract
             DappId = input.DappId,
             PointName = rule.PointName,
             UserPoints = rule.UserPoints,
-            KolPoints = rule.KolPointsPercent,
-            InviterPoints = rule.InviterPointsPercent,
+            KolPointsPercent = rule.KolPointsPercent,
+            InviterPointsPercent = rule.InviterPointsPercent,
             Frequency = input.Frequency
         });
         return new Empty();

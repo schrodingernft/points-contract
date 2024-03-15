@@ -80,7 +80,7 @@ public partial class PointsContract
             .FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for apply.");
         var pointName = rule.PointName;
-        var kolPoints = rule.UserPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator);
+        var kolPoints = GetKolPoints(rule);
         UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, kolPoints);
 
         var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
@@ -89,7 +89,7 @@ public partial class PointsContract
 
         if (inviter != invitee)
         {
-            var inviterPoints = rule.UserPoints.Mul(rule.InviterPointsPercent).Div(PointsContractConstants.Denominator);
+            var inviterPoints = GetInviterPoints(rule);
             UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, inviterPoints);
             pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
                 IncomeSourceType.Inviter, pointName, inviterPoints, dappId));
@@ -152,9 +152,14 @@ public partial class PointsContract
     private long GetPoints(PointsRule rule, long sourceUserPoints, out long kolPoints,
         out long inviterPoints)
     {
-        var userPoints = rule.UserPoints == 0 ? sourceUserPoints : rule.UserPoints;
-        kolPoints = userPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator);
-        inviterPoints = userPoints.Mul(rule.InviterPointsPercent).Div(PointsContractConstants.Denominator);
+        if (rule.EnableProportionalCalculation)
+        {
+            Assert(sourceUserPoints > 0, "Invalid user points.");
+        }
+
+        var userPoints = rule.EnableProportionalCalculation ? sourceUserPoints : rule.UserPoints;
+        kolPoints = GetKolPoints(rule, sourceUserPoints);
+        inviterPoints = GetInviterPoints(rule, sourceUserPoints);
         return userPoints;
     }
 
@@ -179,7 +184,7 @@ public partial class PointsContract
 
         var domainRelationship = State.DomainsMap[domain];
         var invitee = domainRelationship.Invitee;
-        var kolPoints = pointsRule.UserPoints.Mul(pointsRule.KolPointsPercent).Div(PointsContractConstants.Denominator);
+        var kolPoints = GetKolPoints(pointsRule);
         var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName,
             kolPoints, domain);
         pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
@@ -190,13 +195,29 @@ public partial class PointsContract
         var inviter = domainRelationship.Inviter;
         if (inviter == null) return pointsDetails;
 
-        var inviterPoints = pointsRule.UserPoints.Mul(pointsRule.InviterPointsPercent).Div(PointsContractConstants.Denominator);
+        var inviterPoints = GetInviterPoints(pointsRule);
         var inviterIncreasingPoint = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
             inviterPoints, domain);
         pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
             IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
 
         return pointsDetails;
+    }
+
+    private long GetKolPoints(PointsRule pointsRule, long sourceUserPoints = 0)
+    {
+        var userPoints = sourceUserPoints == 0 ? pointsRule.UserPoints : sourceUserPoints;
+        return pointsRule.EnableProportionalCalculation
+            ? userPoints.Mul(pointsRule.KolPointsPercent).Div(PointsContractConstants.Denominator)
+            : pointsRule.KolPointsPercent;
+    }
+
+    private long GetInviterPoints(PointsRule pointsRule, long sourceUserPoints = 0)
+    {
+        var userPoints = sourceUserPoints == 0 ? pointsRule.UserPoints : sourceUserPoints;
+        return pointsRule.EnableProportionalCalculation
+            ? userPoints.Mul(pointsRule.InviterPointsPercent).Div(PointsContractConstants.Denominator)
+            : pointsRule.InviterPointsPercent;
     }
 
     private long UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,

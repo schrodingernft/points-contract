@@ -105,7 +105,8 @@ public partial class PointsContractTests
                         PointName = "XPSGR-5",
                         UserPoints = 0,
                         KolPointsPercent = 1600,
-                        InviterPointsPercent = 800
+                        InviterPointsPercent = 800,
+                        EnableProportionalCalculation = true
                     },
                     new PointsRule
                     {
@@ -113,7 +114,8 @@ public partial class PointsContractTests
                         PointName = "XPSGR-6",
                         UserPoints = 0,
                         KolPointsPercent = 1600,
-                        InviterPointsPercent = 800
+                        InviterPointsPercent = 800,
+                        EnableProportionalCalculation = true
                     },
                     new PointsRule
                     {
@@ -121,7 +123,8 @@ public partial class PointsContractTests
                         PointName = "XPSGR-7",
                         UserPoints = 0,
                         KolPointsPercent = 1600,
-                        InviterPointsPercent = 800
+                        InviterPointsPercent = 800,
+                        EnableProportionalCalculation = true
                     }
                 }
             }
