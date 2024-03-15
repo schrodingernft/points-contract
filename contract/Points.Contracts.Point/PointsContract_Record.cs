@@ -80,17 +80,19 @@ public partial class PointsContract
             .FirstOrDefault(t => t.ActionName == actionName);
         Assert(rule != null, "There is no corresponding points rule set for apply.");
         var pointName = rule.PointName;
-        UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, rule.KolPointsPercent);
+        var kolPoints = rule.UserPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator);
+        UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, kolPoints);
 
         var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
         pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-            IncomeSourceType.Kol, pointName, rule.KolPointsPercent, dappId));
+            IncomeSourceType.Kol, pointName, kolPoints, dappId));
 
         if (inviter != invitee)
         {
-            UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, rule.InviterPointsPercent);
+            var inviterPoints = rule.UserPoints.Mul(rule.InviterPointsPercent).Div(PointsContractConstants.Denominator);
+            UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, inviterPoints);
             pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-                IncomeSourceType.Inviter, pointName, rule.InviterPointsPercent, dappId));
+                IncomeSourceType.Inviter, pointName, inviterPoints, dappId));
         }
 
         State.ApplyDomainCount[Context.Sender][input.DappId] =
@@ -150,18 +152,9 @@ public partial class PointsContract
     private long GetPoints(PointsRule rule, long sourceUserPoints, out long kolPoints,
         out long inviterPoints)
     {
-        if (rule.EnableProportionalCalculation)
-        {
-            Assert(sourceUserPoints > 0, "Invalid user points.");
-        }
-
-        var userPoints = rule.EnableProportionalCalculation ? sourceUserPoints : rule.UserPoints;
-        kolPoints = rule.EnableProportionalCalculation
-            ? userPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator)
-            : rule.KolPointsPercent;
-        inviterPoints = rule.EnableProportionalCalculation
-            ? userPoints.Mul(rule.InviterPointsPercent).Div(PointsContractConstants.Denominator)
-            : rule.InviterPointsPercent;
+        var userPoints = rule.UserPoints == 0 ? sourceUserPoints : rule.UserPoints;
+        kolPoints = userPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator);
+        inviterPoints = userPoints.Mul(rule.InviterPointsPercent).Div(PointsContractConstants.Denominator);
         return userPoints;
     }
 
@@ -186,8 +179,9 @@ public partial class PointsContract
 
         var domainRelationship = State.DomainsMap[domain];
         var invitee = domainRelationship.Invitee;
+        var kolPoints = pointsRule.UserPoints.Mul(pointsRule.KolPointsPercent).Div(PointsContractConstants.Denominator);
         var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName,
-            pointsRule.KolPointsPercent, domain);
+            kolPoints, domain);
         pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
             IncomeSourceType.Kol, pointName, kolIncreasingPoint, dappId));
 
@@ -196,8 +190,9 @@ public partial class PointsContract
         var inviter = domainRelationship.Inviter;
         if (inviter == null) return pointsDetails;
 
+        var inviterPoints = pointsRule.UserPoints.Mul(pointsRule.InviterPointsPercent).Div(PointsContractConstants.Denominator);
         var inviterIncreasingPoint = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
-            pointsRule.InviterPointsPercent, domain);
+            inviterPoints, domain);
         pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
             IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
 
@@ -294,6 +289,5 @@ public partial class PointsContract
         AssertInitialized();
         AssertDappContractAddress(dappId);
         Assert(IsStringValid(actionName), "Invalid action name.");
-        Assert(IsHashValid(dappId), "Invalid dapp id.");
     }
 }

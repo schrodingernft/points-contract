@@ -73,7 +73,6 @@ message PointsRule {
     int64 user_points = 3;
     int64 kol_points_percent = 4;
     int64 inviter_points_percent = 5;
-    bool enable_proportional_calculation = 6;
 }
 
 enum IncomeSourceType {

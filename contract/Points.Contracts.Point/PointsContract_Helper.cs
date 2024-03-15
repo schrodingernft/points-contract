@@ -18,7 +18,7 @@ public partial class PointsContract
 
     private void AssertDappContractAddress(Hash dappId)
     {
-        Assert(dappId != null && State.DappInfos[dappId] != null &&
+        Assert(dappId != null && !dappId.Value.IsNullOrEmpty() && State.DappInfos[dappId] != null &&
                Context.Sender == State.DappInfos[dappId].DappContractAddress, "No permission.");
     }
 
@@ -31,14 +31,9 @@ public partial class PointsContract
                !domain.Any(c => invalidChars.Contains(c) || c > 126 || char.IsUpper(c)) &&
                alias.Length is 3 or 2 && alias.All(t => !string.IsNullOrEmpty(t)), "Invalid domain.");
     }
-    
+
     private bool IsStringValid(string input)
     {
         return !string.IsNullOrWhiteSpace(input);
-    }
-    
-    private bool IsHashValid(Hash input)
-    {
-        return input != null && !input.Value.IsNullOrEmpty();
     }
 }
