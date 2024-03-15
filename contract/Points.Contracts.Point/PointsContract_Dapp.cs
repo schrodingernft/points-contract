@@ -1,5 +1,6 @@
 using AElf;
 using AElf.Sdk.CSharp;
+using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
 namespace Points.Contracts.Point;
@@ -70,7 +71,8 @@ public partial class PointsContract
         Assert(rule != null, "Invalid self-increasing points rules.");
         Assert(!string.IsNullOrEmpty(rule.PointName) && State.PointInfos[input.DappId][rule.PointName] != null,
             "Wrong points name input.");
-        Assert(rule.UserPoints > 0 && rule.KolPointsPercent > 0 && rule.InviterPointsPercent > 0, "Points must be greater than 0.");
+        Assert(rule.UserPoints > 0 && rule.KolPointsPercent > 0 && rule.InviterPointsPercent > 0,
+            "Points must be greater than 0.");
 
         State.SelfIncreasingPointsRules[input.DappId] = rule;
 
@@ -90,32 +92,48 @@ public partial class PointsContract
     {
         AssertInitialized();
         AssertDappAdmin(input.DappId);
-        AssertValidCreateInput(input);
+        AssertValidCreateInput(input.PointsName,input.Decimals,input.DappId);
+        SetPoint(input.DappId, input.PointsName, input.Decimals);
 
-        var pointsName = input.PointsName;
-        var decimals = input.Decimals;
-        State.PointInfos[input.DappId][pointsName] = new PointInfo
+        return new Empty();
+    }
+
+    public override Empty CreatePointList(CreatePointListInput input)
+    {
+        AssertInitialized();
+        AssertDappAdmin(input.DappId);
+        Assert(input.PointList != null && input.PointList.Count > 0, "Invalid input.");
+        foreach (var point in input.PointList)
+        {
+            AssertValidCreateInput(point.TokenName,point.Decimals,input.DappId);
+            SetPoint(input.DappId, point.TokenName, point.Decimals);
+        }
+
+        return new Empty();
+    }
+
+    private void SetPoint(Hash dappId, string pointsName, int decimals)
+    {
+        State.PointInfos[dappId][pointsName] = new PointInfo
         {
             TokenName = pointsName,
             Decimals = decimals
         };
-
         Context.Fire(new PointCreated
         {
-            DappId = input.DappId,
+            DappId = dappId,
             TokenName = pointsName,
             Decimals = decimals
         });
-        return new Empty();
     }
 
-    private void AssertValidCreateInput(CreatePointInput input)
+    private void AssertValidCreateInput(string pointsName, int decimals, Hash dappId)
     {
-        Assert(input.PointsName.Length is > 0 and <= PointsContractConstants.TokenNameLength
-               && input.Decimals is >= 0 and <= PointsContractConstants.MaxDecimals, "Invalid input.");
+        Assert(pointsName.Length is > 0 and <= PointsContractConstants.TokenNameLength
+               && decimals is >= 0 and <= PointsContractConstants.MaxDecimals, "Invalid input.");
 
         var empty = new PointInfo();
-        var existing = State.PointInfos[input.DappId][input.PointsName];
+        var existing = State.PointInfos[dappId][pointsName];
         Assert(existing == null || existing.Equals(empty), "Point token already exists.");
     }
 }

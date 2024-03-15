@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
@@ -234,5 +235,40 @@ public partial class PointsContractTests
             .PreviousBlockHash;
         return HashHelper.ConcatAndCompute(previousBlockHash, result.TransactionResult.TransactionId,
             HashHelper.ComputeFrom(input));
+    }
+
+    [Fact]
+    public async Task CreatePointListTest()
+    {
+        await Initialize();
+        var dappId = await AddDapp();
+        var pointList = new List<PointInfo>();
+        pointList.Add(new PointInfo
+        {
+            TokenName = DefaultPointName,
+            Decimals = 8
+        });
+        pointList.Add(new PointInfo
+        {
+            TokenName = JoinPointName,
+            Decimals = 8
+        });
+        pointList.Add(new PointInfo
+        {
+            TokenName = SelfIncreasingPointName,
+            Decimals = 8
+        });
+        await PointsContractStub.CreatePointList.SendAsync(new CreatePointListInput
+        {
+            DappId = dappId,
+            PointList = { pointList }
+        });
+        var point = await PointsContractStub.GetPoint.CallAsync(new GetPointInput
+        {
+            DappId = dappId,
+            PointsName = SelfIncreasingPointName
+        });
+        point.Decimals.ShouldBe(8);
+        point.TokenName.ShouldBe(SelfIncreasingPointName);
     }
 }

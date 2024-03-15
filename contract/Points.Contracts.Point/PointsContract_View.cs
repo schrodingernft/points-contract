@@ -64,4 +64,9 @@ public partial class PointsContract
 
     public override GetSelfIncreasingPointsRuleOutput GetSelfIncreasingPointsRule(
         GetSelfIncreasingPointsRuleInput input) => new() { Rule = State.SelfIncreasingPointsRules[input.DappId] };
+
+    public override PointInfo GetPoint(GetPointInput input)
+    {
+        return State.PointInfos[input.DappId][input.PointsName];
+    }
 }

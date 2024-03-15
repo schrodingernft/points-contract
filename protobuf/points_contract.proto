@@ -20,6 +20,9 @@ service PointsContract {
     rpc SetReservedDomainList(SetReservedDomainListInput) returns (google.protobuf.Empty){}
     rpc GetReservedDomainList(google.protobuf.Empty) returns (GetReservedDomainListOutput){option (aelf.is_view) = true;}
     rpc CreatePoint(CreatePointInput) returns (google.protobuf.Empty) {}
+    rpc CreatePointList(CreatePointListInput) returns (google.protobuf.Empty) {}
+    rpc GetPoint(GetPointInput) returns (PointInfo){ option (aelf.is_view) = true; }
+    
     rpc SetMaxApplyDomainCount(google.protobuf.Int32Value) returns (google.protobuf.Empty){}
 
     rpc Join(JoinInput) returns (google.protobuf.Empty) {}
@@ -248,6 +251,16 @@ message CreatePointInput {
     aelf.Hash dapp_id = 1;
     string points_name = 2;
     int32 decimals = 3;
+}
+
+message CreatePointListInput {
+    aelf.Hash dapp_id = 1;
+    repeated PointInfo point_list = 2;
+}
+
+message GetPointInput {
+    aelf.Hash dapp_id = 1;
+    string points_name = 2;
 }
 
 message PointCreated {
