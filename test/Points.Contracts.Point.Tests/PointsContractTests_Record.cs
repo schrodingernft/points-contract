@@ -196,7 +196,7 @@ public partial class PointsContractTests
     }
 
     [Fact]
-    public async Task JoinTests()
+    public async Task<Hash> JoinTests()
     {
         await Initialize();
         var dappId = await AddDapp();
@@ -320,6 +320,8 @@ public partial class PointsContractTests
         });
         getBalanceResult.PointName.ShouldBe(SelfIncreasingPointName);
         getBalanceResult.Balance.ShouldBe(5 * 100000); // join + 20000000, increasing + 10000000*5
+
+        return dappId;
     }
 
     [Fact]

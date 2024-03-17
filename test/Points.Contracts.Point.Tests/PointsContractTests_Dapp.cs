@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
@@ -66,8 +67,8 @@ public partial class PointsContractTests
             });
         getResult.Rule.PointName.ShouldBe(SelfIncreasingPointName);
         getResult.Rule.UserPoints.ShouldBe(10000000);
-        getResult.Rule.KolPoints.ShouldBe(1000000);
-        getResult.Rule.InviterPoints.ShouldBe(100000);
+        getResult.Rule.KolPointsPercent.ShouldBe(1000000);
+        getResult.Rule.InviterPointsPercent.ShouldBe(100000);
     }
 
     [Fact]
@@ -96,8 +97,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
-                    InviterPoints = 100000
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
@@ -110,8 +111,8 @@ public partial class PointsContractTests
                 {
                     PointName = "",
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
-                    InviterPoints = 100000
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Wrong points name input.");
@@ -126,8 +127,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = -1,
-                    KolPoints = 1000000,
-                    InviterPoints = 100000
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -140,8 +141,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = -1,
-                    InviterPoints = 100000
+                    KolPointsPercent = -1,
+                    InviterPointsPercent = 100000
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -154,8 +155,8 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
-                    InviterPoints = -1
+                    KolPointsPercent = 1000000,
+                    InviterPointsPercent = -1
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -168,7 +169,7 @@ public partial class PointsContractTests
                 {
                     PointName = DefaultPointName,
                     UserPoints = 10000000,
-                    KolPoints = 1000000,
+                    KolPointsPercent = 1000000,
                 }
             });
         result.TransactionResult.Error.ShouldContain("Points must be greater than 0.");
@@ -184,8 +185,8 @@ public partial class PointsContractTests
                 ActionName = SelfIncreaseActionName,
                 PointName = SelfIncreasingPointName,
                 UserPoints = 10000000,
-                KolPoints = 1000000,
-                InviterPoints = 100000
+                KolPointsPercent = 1000000,
+                InviterPointsPercent = 100000
             }
         });
     }
@@ -204,16 +205,16 @@ public partial class PointsContractTests
                         ActionName = DefaultActionName,
                         PointName = DefaultPointName,
                         UserPoints = 10000000,
-                        KolPoints = 1000000,
-                        InviterPoints = 100000
+                        KolPointsPercent = 1000000,
+                        InviterPointsPercent = 100000
                     },
                     new PointsRule
                     {
                         ActionName = JoinActionName,
                         PointName = JoinPointName,
                         UserPoints = 20000000,
-                        KolPoints = 2000000,
-                        InviterPoints = 200000
+                        KolPointsPercent = 2000000,
+                        InviterPointsPercent = 200000
                     }
                 }
             }
@@ -234,5 +235,40 @@ public partial class PointsContractTests
             .PreviousBlockHash;
         return HashHelper.ConcatAndCompute(previousBlockHash, result.TransactionResult.TransactionId,
             HashHelper.ComputeFrom(input));
+    }
+
+    [Fact]
+    public async Task CreatePointListTest()
+    {
+        await Initialize();
+        var dappId = await AddDapp();
+        var pointList = new List<PointInfo>();
+        pointList.Add(new PointInfo
+        {
+            TokenName = DefaultPointName,
+            Decimals = 8
+        });
+        pointList.Add(new PointInfo
+        {
+            TokenName = JoinPointName,
+            Decimals = 8
+        });
+        pointList.Add(new PointInfo
+        {
+            TokenName = SelfIncreasingPointName,
+            Decimals = 8
+        });
+        await PointsContractStub.CreatePointList.SendAsync(new CreatePointListInput
+        {
+            DappId = dappId,
+            PointList = { pointList }
+        });
+        var point = await PointsContractStub.GetPoint.CallAsync(new GetPointInput
+        {
+            DappId = dappId,
+            PointsName = SelfIncreasingPointName
+        });
+        point.Decimals.ShouldBe(8);
+        point.TokenName.ShouldBe(SelfIncreasingPointName);
     }
 }

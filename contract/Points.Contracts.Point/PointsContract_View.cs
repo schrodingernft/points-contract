@@ -37,8 +37,8 @@ public partial class PointsContract
             var points = type switch
             {
                 IncomeSourceType.User => rule.UserPoints,
-                IncomeSourceType.Kol => rule.KolPoints,
-                IncomeSourceType.Inviter => rule.InviterPoints,
+                IncomeSourceType.Kol => GetKolPoints(rule),
+                IncomeSourceType.Inviter => GetInviterPoints(rule),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
             };
 
@@ -64,4 +64,9 @@ public partial class PointsContract
 
     public override GetSelfIncreasingPointsRuleOutput GetSelfIncreasingPointsRule(
         GetSelfIncreasingPointsRuleInput input) => new() { Rule = State.SelfIncreasingPointsRules[input.DappId] };
+
+    public override PointInfo GetPoint(GetPointInput input)
+    {
+        return State.PointInfos[input.DappId][input.PointsName];
+    }
 }
