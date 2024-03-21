@@ -26,10 +26,11 @@ public partial class PointsContract
                !string.IsNullOrEmpty(pointName) && State.PointInfos[dappId][pointName] != null, "Invalid input.");
         Assert(dappId != null && State.DappInfos[dappId]?.OfficialDomain == input.Domain ||
                State.DomainsMap[domain] != null, "Invalid domain.");
-
+        
         var balance = State.PointsBalance[address][domain][type][pointName];
+        var balanceValue = State.PointsBalanceValue[address][domain][type][pointName] ?? new BigIntValue(balance);
         var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId]?[address]?[domain]?[type];
-        long increasingPoints = 0;
+        var increasingPoints = new BigIntValue(0);
 
         var rule = State.SelfIncreasingPointsRules[dappId];
         if (pointName == rule?.PointName)
@@ -54,8 +55,8 @@ public partial class PointsContract
         {
             PointName = input.PointName,
             Owner = input.Address,
-            Balance = increasingPoints.Add(balance),
-            LastUpdateTime = userLastBillingUpdateTimes
+            LastUpdateTime = userLastBillingUpdateTimes,
+            BalanceValue = increasingPoints.Add(balanceValue)
         };
     }
 

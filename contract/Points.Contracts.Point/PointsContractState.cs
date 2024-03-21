@@ -22,4 +22,6 @@ public partial class PointsContractState : ContractState
     public MappedState<Hash, Address, string, IncomeSourceType, Timestamp> LastPointsUpdateTimes { get; set; }
 
     public MappedState<Address, string, IncomeSourceType, string, long> PointsBalance { get; set; }
+    public MappedState<Address, string, IncomeSourceType, string, BigIntValue> PointsBalanceValue { get; set; }
+
 }

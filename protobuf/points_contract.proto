@@ -85,18 +85,6 @@ enum IncomeSourceType {
     INVITER = 2;
 }
 
-message PointsStateList {
-    repeated PointsState point_states = 1;
-}
-
-message PointsState {
-    aelf.Address address = 1;
-    string domain = 2;
-    IncomeSourceType income_source_type = 3;
-    string point_name = 4;
-    int64 balance = 5;
-}
-
 message PointsChanged {
     option (aelf.is_event) = true;
     PointsChangedDetails points_changed_details = 1;
@@ -115,6 +103,8 @@ message PointsChangedDetail {
     string points_name = 6;  
     int64 increase_amount = 7;
     int64 balance = 8;
+    aelf.BigIntValue balance_value = 9;
+    aelf.BigIntValue increase_value = 10;
 }
 
 message SettleInput {
@@ -122,6 +112,7 @@ message SettleInput {
     string action_name = 2;
     aelf.Hash dapp_id = 3;
     int64 user_points = 4;
+    aelf.BigIntValue user_points_value = 5;
 }
 
 message BatchSettleInput {
@@ -133,6 +124,7 @@ message BatchSettleInput {
 message UserPoints {
     aelf.Address user_address = 1;
     int64 user_points = 2;
+    aelf.BigIntValue user_points_value = 3;
 }
 
 message GetPointsBalanceInput {
@@ -148,6 +140,7 @@ message GetPointsBalanceOutput {
     aelf.Address owner = 2;
     int64 balance = 3;
     google.protobuf.Timestamp last_update_time = 4;
+    aelf.BigIntValue balance_value = 5;
 }
 
 message AddDappInput {

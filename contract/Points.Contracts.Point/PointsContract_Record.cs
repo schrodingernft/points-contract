@@ -108,7 +108,7 @@ public partial class PointsContract
         return new Empty();
     }
 
-    private void SettlingPoints(Hash dappId, Address user, string actionName, long sourceUserPoints = 0)
+    private void SettlingPoints(Hash dappId, Address user, string actionName, BigIntValue sourceUserPoints = null)
     {
         var pointsRules = State.DappInfos[dappId].DappsPointRules;
         var rule = pointsRules.PointsRules.FirstOrDefault(t => t.ActionName == actionName);
@@ -149,12 +149,12 @@ public partial class PointsContract
         Context.Fire(pointsDetails);
     }
 
-    private long GetPoints(PointsRule rule, long sourceUserPoints, out long kolPoints,
-        out long inviterPoints)
+    private BigIntValue GetPoints(PointsRule rule, BigIntValue sourceUserPoints, out BigIntValue kolPoints,
+        out BigIntValue inviterPoints)
     {
         if (rule.EnableProportionalCalculation)
         {
-            Assert(sourceUserPoints > 0, "Invalid user points.");
+            Assert(sourceUserPoints != null && sourceUserPoints.Value != "0", "Invalid user points.");
         }
 
         var userPoints = rule.EnableProportionalCalculation ? sourceUserPoints : rule.UserPoints;
@@ -204,27 +204,27 @@ public partial class PointsContract
         return pointsDetails;
     }
 
-    private long GetKolPoints(PointsRule pointsRule, long sourceUserPoints = 0)
+    private BigIntValue GetKolPoints(PointsRule pointsRule, BigIntValue sourceUserPoints = null)
     {
-        var userPoints = sourceUserPoints == 0 ? pointsRule.UserPoints : sourceUserPoints;
+        var userPoints = sourceUserPoints ?? pointsRule.UserPoints;
         return pointsRule.EnableProportionalCalculation
             ? userPoints.Mul(pointsRule.KolPointsPercent).Div(PointsContractConstants.Denominator)
-            : pointsRule.KolPointsPercent;
+            : new BigIntValue(pointsRule.KolPointsPercent);
     }
 
-    private long GetInviterPoints(PointsRule pointsRule, long sourceUserPoints = 0)
+    private BigIntValue GetInviterPoints(PointsRule pointsRule, BigIntValue sourceUserPoints = null)
     {
-        var userPoints = sourceUserPoints == 0 ? pointsRule.UserPoints : sourceUserPoints;
+        var userPoints = sourceUserPoints ?? pointsRule.UserPoints;
         return pointsRule.EnableProportionalCalculation
             ? userPoints.Mul(pointsRule.InviterPointsPercent).Div(PointsContractConstants.Denominator)
-            : pointsRule.InviterPointsPercent;
+            : new BigIntValue(pointsRule.InviterPointsPercent);
     }
 
-    private long UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
-        long points, string domain)
+    private BigIntValue UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
+        BigIntValue points, string domain)
     {
         var lastBlockTimestamp = State.LastPointsUpdateTimes[dappId][address][domain][type];
-        long waitingSettledPoints = 0;
+        var waitingSettledPoints = new BigIntValue(0);
         if (lastBlockTimestamp != null)
         {
             var lastBlockTime = lastBlockTimestamp.Seconds;
@@ -238,8 +238,8 @@ public partial class PointsContract
         return waitingSettledPoints;
     }
 
-    private long CalculateWaitingSettledSelfIncreasingPoints(Hash dappId, Address address, IncomeSourceType type,
-        long currentBlockTime, long lastBlockTime, string domain, long points)
+    private BigIntValue CalculateWaitingSettledSelfIncreasingPoints(Hash dappId, Address address, IncomeSourceType type,
+        long currentBlockTime, long lastBlockTime, string domain, BigIntValue points)
     {
         var timeGap = currentBlockTime.Sub(lastBlockTime);
         return type switch
@@ -252,14 +252,16 @@ public partial class PointsContract
     }
 
     private void UpdatePointsBalance(Address address, string domain, IncomeSourceType type, string pointName,
-        long amount)
+        BigIntValue amount)
     {
-        State.PointsBalance[address][domain][type][pointName] =
-            State.PointsBalance[address][domain][type][pointName].Add(amount);
+        var balance = State.PointsBalance[address][domain][type][pointName];
+        var pointsBalance = State.PointsBalanceValue[address][domain][type][pointName] ?? new BigIntValue(balance);
+        pointsBalance = pointsBalance.Add(amount);
+        State.PointsBalanceValue[address][domain][type][pointName] = pointsBalance;
     }
 
     private PointsChangedDetail GeneratePointsDetail(Address address, string domain, string actionName,
-        IncomeSourceType type, string pointName, long amount, Hash dappId)
+        IncomeSourceType type, string pointName, BigIntValue amount, Hash dappId)
     {
         // pointsChanged
         return new PointsChangedDetail
@@ -270,8 +272,8 @@ public partial class PointsContract
             IncomeSourceType = type,
             ActionName = actionName,
             PointsName = pointName,
-            IncreaseAmount = amount,
-            Balance = State.PointsBalance[address][domain][type][pointName]
+            IncreaseValue = amount,
+            BalanceValue = State.PointsBalanceValue[address][domain][type][pointName]
         };
     }
 
@@ -280,10 +282,7 @@ public partial class PointsContract
         CheckSettleParam(input.DappId, input.ActionName);
         var dappId = input.DappId;
         var userAddress = input.UserAddress;
-        Assert(userAddress.Value != null, "User address cannot be null");
-        Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userAddress]), "User has not registered yet");
-        SettlingPoints(dappId, userAddress, input.ActionName, input.UserPoints);
-
+        CheckAndSettlePoints(dappId, userAddress, input.UserPointsValue, input.UserPoints, input.ActionName);
         return new Empty();
     }
 
@@ -296,13 +295,21 @@ public partial class PointsContract
             input.UserPointsList.Count <= PointsContractConstants.MaxBatchSettleListCount, "Invalid user point list.");
         foreach (var userPoints in input.UserPointsList)
         {
-            Assert(userPoints.UserAddress.Value != null, "User address cannot be null");
-            Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userPoints.UserAddress]),
-                "User has not registered yet");
-            SettlingPoints(dappId, userPoints.UserAddress, input.ActionName, userPoints.UserPoints_);
+            CheckAndSettlePoints(dappId, userPoints.UserAddress, userPoints.UserPointsValue, userPoints.UserPoints_,
+                input.ActionName);
         }
 
         return new Empty();
+    }
+
+    private void CheckAndSettlePoints(Hash dappId, Address userAddress, BigIntValue userPointsValue, long userPoints,
+        string actionName)
+    {
+        Assert(userAddress.Value != null, "User address cannot be null");
+        Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userAddress]),
+            "User has not registered yet");
+        var userPoint = userPointsValue ?? new BigIntValue(userPoints);
+        SettlingPoints(dappId, userAddress, actionName, userPoint);
     }
 
     private void CheckSettleParam(Hash dappId, string actionName)

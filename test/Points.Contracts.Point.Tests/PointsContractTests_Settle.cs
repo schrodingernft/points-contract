@@ -19,7 +19,7 @@ public partial class PointsContractTests
             DappId = dappId,
             ActionName = "Adpot",
             UserAddress = User2Address,
-            UserPoints = 131400
+            UserPointsValue = 131400
         });
         var getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
@@ -30,7 +30,7 @@ public partial class PointsContractTests
             PointName = "XPSGR-5"
         });
         getBalanceResult.PointName.ShouldBe("XPSGR-5");
-        getBalanceResult.Balance.ShouldBe(131400);
+        getBalanceResult.BalanceValue.ShouldBe(131400);
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
             DappId = dappId,
@@ -40,7 +40,7 @@ public partial class PointsContractTests
             PointName = "XPSGR-5"
         });
         getBalanceResult.PointName.ShouldBe("XPSGR-5");
-        getBalanceResult.Balance.ShouldBe(131400*1600/10000);
+        getBalanceResult.BalanceValue.ShouldBe(131400*1600/10000);
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
             DappId = dappId,
@@ -50,13 +50,13 @@ public partial class PointsContractTests
             PointName = "XPSGR-5"
         });
         getBalanceResult.PointName.ShouldBe("XPSGR-5");
-        getBalanceResult.Balance.ShouldBe(131400*800/10000);
+        getBalanceResult.BalanceValue.ShouldBe(131400*800/10000);
         await PointsContractStub.Settle.SendAsync(new SettleInput
         {
             DappId = dappId,
             ActionName = "Reroll",
             UserAddress = User2Address,
-            UserPoints = 191900
+            UserPointsValue = 191900
         });
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
@@ -67,7 +67,7 @@ public partial class PointsContractTests
             PointName = "XPSGR-6"
         });
         getBalanceResult.PointName.ShouldBe("XPSGR-6");
-        getBalanceResult.Balance.ShouldBe(191900);
+        getBalanceResult.BalanceValue.ShouldBe(191900);
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
             DappId = dappId,
@@ -77,7 +77,7 @@ public partial class PointsContractTests
             PointName = "XPSGR-6"
         });
         getBalanceResult.PointName.ShouldBe("XPSGR-6");
-        getBalanceResult.Balance.ShouldBe(191900*1600/10000);
+        getBalanceResult.BalanceValue.ShouldBe(191900*1600/10000);
         getBalanceResult = await PointsContractStub.GetPointsBalance.CallAsync(new GetPointsBalanceInput
         {
             DappId = dappId,
@@ -87,7 +87,7 @@ public partial class PointsContractTests
             PointName = "XPSGR-6"
         });
         getBalanceResult.PointName.ShouldBe("XPSGR-6");
-        getBalanceResult.Balance.ShouldBe(191900*800/10000);
+        getBalanceResult.BalanceValue.ShouldBe(191900*800/10000);
     }
     
     private async Task SetDappPointsRulesForSettle(Hash dappId)
