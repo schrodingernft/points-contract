@@ -205,8 +205,9 @@ public partial class PointsContractTests
                         ActionName = DefaultActionName,
                         PointName = DefaultPointName,
                         UserPoints = 10000000,
-                        KolPointsPercent = 1000000,
-                        InviterPointsPercent = 100000
+                        KolPointsPercent = 1000,
+                        InviterPointsPercent = 100,
+                        EnableProportionalCalculation = true
                     },
                     new PointsRule
                     {
