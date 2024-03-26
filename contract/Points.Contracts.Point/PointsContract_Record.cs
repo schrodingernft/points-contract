@@ -152,10 +152,7 @@ public partial class PointsContract
     private BigIntValue GetPoints(PointsRule rule, BigIntValue sourceUserPoints, out BigIntValue kolPoints,
         out BigIntValue inviterPoints)
     {
-        if (rule.EnableProportionalCalculation)
-        {
-            Assert(sourceUserPoints != null && sourceUserPoints.Value != "0", "Invalid user points.");
-        }
+        sourceUserPoints ??= new BigIntValue(rule.UserPoints);
 
         var userPoints = rule.EnableProportionalCalculation ? sourceUserPoints : rule.UserPoints;
         kolPoints = GetKolPoints(rule, sourceUserPoints);
@@ -309,6 +306,7 @@ public partial class PointsContract
         Assert(!string.IsNullOrEmpty(State.RegistrationMap[dappId][userAddress]),
             "User has not registered yet");
         var userPoint = userPointsValue ?? new BigIntValue(userPoints);
+        Assert(userPoint.Value != "0", "Invalid user points value.");
         SettlingPoints(dappId, userAddress, actionName, userPoint);
     }
 
