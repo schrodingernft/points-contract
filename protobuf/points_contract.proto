@@ -39,6 +39,9 @@ service PointsContract {
     rpc ApplyToBeAdvocate(ApplyToBeAdvocateInput) returns (google.protobuf.Empty) {}
     rpc GetDomainApplyInfo(google.protobuf.StringValue) returns (DomainRelationshipInfo){option (aelf.is_view) = true;}
     rpc GetMaxApplyCount(google.protobuf.Empty) returns (google.protobuf.Int32Value){option (aelf.is_view) = true;}
+
+    rpc AcceptReferral (AcceptReferralInput) returns (google.protobuf.Empty) {}
+    rpc GetReferralRelationInfo (GetReferralRelationInfoInput) returns (ReferralRelationInfo) { option (aelf.is_view) = true; }
 }
 
 // NEW
@@ -201,6 +204,7 @@ message ApplyToBeAdvocateInput {
     string domain = 1;
     aelf.Hash dapp_id = 2;
     aelf.Address invitee = 3;
+    aelf.Address inviter = 4;
 }
 
 message InviterApplied {
@@ -261,4 +265,36 @@ message PointCreated {
     aelf.Hash dapp_id = 1;
     string token_name = 2;
     int32 decimals = 3;
+}
+
+message AcceptReferralInput {
+    aelf.Hash dapp_id = 1;
+    aelf.Address referrer = 2;
+    aelf.Address invitee = 3;
+}
+
+message ReferralAccepted {
+    option (aelf.is_event) = true;
+    aelf.Hash dapp_id = 1;
+    string domain = 2;
+    aelf.Address referrer = 3;
+    aelf.Address invitee = 4;
+    aelf.Address inviter = 5;
+}
+
+message ReferralRelationInfo {
+    aelf.Hash dapp_id = 1;
+    aelf.Address inviter = 2;
+    aelf.Address referrer = 3;
+    aelf.Address invitee = 4;
+}
+
+message ReferralFollowerCount {
+    int64 follower_count = 1;
+    int64 sub_follower_count = 2;
+}
+
+message GetReferralRelationInfoInput {
+    aelf.Hash dapp_id = 1;
+    aelf.Address invitee = 2;
 }

@@ -24,4 +24,8 @@ public partial class PointsContractState : ContractState
     public MappedState<Address, string, IncomeSourceType, string, long> PointsBalance { get; set; }
     public MappedState<Address, string, IncomeSourceType, string, BigIntValue> PointsBalanceValue { get; set; }
 
+    
+    public MappedState<Hash, Address, ReferralRelationInfo> ReferralRelationInfoMap { get; set; }
+    public MappedState<Hash, Address, ReferralFollowerCount> ReferralFollowerCountMap { get; set; }
+    public MappedState<Hash, Address, string, IncomeSourceType, Timestamp> ReferralPointsUpdateTimes { get; set; }
 }

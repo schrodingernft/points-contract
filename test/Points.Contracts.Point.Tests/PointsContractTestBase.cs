@@ -37,7 +37,10 @@ public class PointsContractTestBase : DAppContractTestBase<PointsContractTestMod
     protected const string SelfIncreasingPointName = "INCREASE-0";
     protected const string JoinActionName = "Join";
     protected const string SelfIncreaseActionName = "SelfIncrease";
+    protected const string AcceptReferralActionName = "AcceptReferral";
     protected const string DefaultOfficialDomain = "official.com";
+    protected const string SettlePointName = "SETTLE-0";
+    protected const string SettleActionName = "Settle";
     protected static readonly Int32Value DefaultMaxApply = new() { Value = 2 };
 
     protected PointsContractTestBase()

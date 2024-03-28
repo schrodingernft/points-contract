@@ -26,37 +26,52 @@ public partial class PointsContract
                !string.IsNullOrEmpty(pointName) && State.PointInfos[dappId][pointName] != null, "Invalid input.");
         Assert(dappId != null && State.DappInfos[dappId]?.OfficialDomain == input.Domain ||
                State.DomainsMap[domain] != null, "Invalid domain.");
-        
+
         var balance = State.PointsBalance[address][domain][type][pointName];
         var balanceValue = State.PointsBalanceValue[address][domain][type][pointName] ?? new BigIntValue(balance);
         var userLastBillingUpdateTimes = State.LastPointsUpdateTimes[dappId]?[address]?[domain]?[type];
-        var increasingPoints = new BigIntValue(0);
-
         var rule = State.SelfIncreasingPointsRules[dappId];
-        if (pointName == rule?.PointName)
-        {
-            var points = type switch
-            {
-                IncomeSourceType.User => rule.UserPoints,
-                IncomeSourceType.Kol => GetKolPoints(rule),
-                IncomeSourceType.Inviter => GetInviterPoints(rule),
-                _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
-            };
 
-            // An account that has not been bound to a domain has no update time.
-            if (userLastBillingUpdateTimes != null)
+        if (pointName != rule?.PointName || userLastBillingUpdateTimes == null)
+        {
+            return new GetPointsBalanceOutput
             {
-                increasingPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
-                    Context.CurrentBlockTime.Seconds, userLastBillingUpdateTimes.Seconds, domain, points);
-            }
+                PointName = input.PointName,
+                Owner = input.Address,
+                LastUpdateTime = userLastBillingUpdateTimes,
+                BalanceValue = balanceValue
+            };
+        }
+
+        var points = type switch
+        {
+            IncomeSourceType.User => rule.UserPoints,
+            IncomeSourceType.Kol => GetKolPoints(rule),
+            IncomeSourceType.Inviter => GetInviterPoints(rule),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "")
+        };
+
+        balanceValue = balanceValue.Add(CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
+            Context.CurrentBlockTime.Seconds, userLastBillingUpdateTimes.Seconds, domain, points));
+
+        // An account that has not been bound to a domain has no update time.
+        var userLastBillingUpdateTimesForReferral = State.ReferralPointsUpdateTimes[dappId]?[address]?[domain]?[type] ??
+                                                    State.LastPointsUpdateTimes[dappId]?[address]?[domain]?[type];
+
+        if (userLastBillingUpdateTimesForReferral != null)
+        {
+            balanceValue = balanceValue.Add(CalculateWaitingSettledSelfIncreasingPointsForReferral(dappId, address,
+                Context.CurrentBlockTime.Seconds, userLastBillingUpdateTimesForReferral.Seconds, rule, domain));
         }
 
         return new GetPointsBalanceOutput
         {
             PointName = input.PointName,
             Owner = input.Address,
-            LastUpdateTime = userLastBillingUpdateTimes,
-            BalanceValue = increasingPoints.Add(balanceValue)
+            LastUpdateTime = userLastBillingUpdateTimes > userLastBillingUpdateTimesForReferral
+                ? userLastBillingUpdateTimes
+                : userLastBillingUpdateTimesForReferral,
+            BalanceValue = balanceValue
         };
     }
 
@@ -69,5 +84,11 @@ public partial class PointsContract
     public override PointInfo GetPoint(GetPointInput input)
     {
         return State.PointInfos[input.DappId][input.PointsName];
+    }
+
+    public override ReferralRelationInfo GetReferralRelationInfo(GetReferralRelationInfoInput input)
+    {
+        if (!IsHashValid(input.DappId) || !IsAddressValid(input.Invitee)) return new ReferralRelationInfo();
+        return State.ReferralRelationInfoMap[input.DappId]?[input.Invitee] ?? new ReferralRelationInfo();
     }
 }

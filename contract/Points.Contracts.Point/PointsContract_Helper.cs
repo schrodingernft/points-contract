@@ -36,4 +36,14 @@ public partial class PointsContract
     {
         return !string.IsNullOrWhiteSpace(input);
     }
+    
+    private bool IsAddressValid(Address input)
+    {
+        return input != null && !input.Value.IsNullOrEmpty();
+    }
+    
+    private bool IsHashValid(Hash input)
+    {
+        return input != null && !input.Value.IsNullOrEmpty();
+    }
 }

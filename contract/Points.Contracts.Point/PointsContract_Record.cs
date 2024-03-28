@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using AElf;
 using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
 using AElf.Types;
@@ -20,15 +21,13 @@ public partial class PointsContract
 
         var domain = input.Domain;
         AssertDomainFormat(domain);
-        Assert(string.IsNullOrEmpty(State.RegistrationMap[dappId][registrant]),
-            "A dapp can only be registered once.");
-        State.RegistrationMap[dappId][registrant] = domain;
 
         // The user registered using an unofficial domain link.
 
         var relationship = State.DomainsMap[domain];
         Assert(domain == State.DappInfos[dappId].OfficialDomain || relationship != null, "Not exist domain.");
-        SettlingPoints(dappId, registrant, nameof(Join));
+
+        Register(dappId, registrant, domain, nameof(Join));
 
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
@@ -55,8 +54,10 @@ public partial class PointsContract
 
     public override Empty ApplyToBeAdvocate(ApplyToBeAdvocateInput input)
     {
+        Assert(input.Inviter == null || !input.Inviter.Value.IsNullOrEmpty(), "Invalid inviter.");
+
         var invitee = input.Invitee;
-        var inviter = Context.Sender;
+        var inviter = input.Inviter ?? Context.Sender;
         Assert(invitee != null, "Invalid invitee.");
 
         var dappId = input.DappId;
@@ -68,6 +69,7 @@ public partial class PointsContract
         Assert(State.DomainsMap[domain] == null, "Domain has Exist.");
         Assert(string.IsNullOrEmpty(State.ReservedDomains?.Value?.Domains.FirstOrDefault(t => t == domain)),
             "This domain name is an officially reserved domain name");
+
         State.DomainsMap[domain] = new DomainRelationshipInfo
         {
             Domain = domain,
@@ -81,29 +83,26 @@ public partial class PointsContract
         Assert(rule != null, "There is no corresponding points rule set for apply.");
         var pointName = rule.PointName;
         var kolPoints = GetKolPoints(rule);
-        UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, rule.PointName, kolPoints);
 
-        var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
-        pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-            IncomeSourceType.Kol, pointName, kolPoints, dappId));
+        var pointsChangeDetails = new PointsChangedDetails();
+        pointsChangeDetails = UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, pointName, kolPoints, dappId,
+            actionName, pointsChangeDetails);
 
         if (inviter != invitee)
         {
             var inviterPoints = GetInviterPoints(rule);
-            UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName, inviterPoints);
-            pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-                IncomeSourceType.Inviter, pointName, inviterPoints, dappId));
+            pointsChangeDetails = UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, rule.PointName,
+                inviterPoints, dappId, actionName, pointsChangeDetails);
         }
 
-        State.ApplyDomainCount[Context.Sender][input.DappId] =
-            State.ApplyDomainCount[Context.Sender][input.DappId].Add(1);
-        Context.Fire(pointsDetails);
+        State.ApplyDomainCount[inviter][input.DappId] = State.ApplyDomainCount[inviter][input.DappId].Add(1);
+        Context.Fire(new PointsChanged { PointsChangedDetails = pointsChangeDetails });
         Context.Fire(new InviterApplied
         {
             Domain = input.Domain,
             DappId = input.DappId,
             Invitee = input.Invitee,
-            Inviter = Context.Sender
+            Inviter = inviter
         });
         return new Empty();
     }
@@ -116,46 +115,66 @@ public partial class PointsContract
 
         var pointName = rule.PointName;
         var domain = State.RegistrationMap[dappId][user];
-        var pointsDetails = new PointsChanged { PointsChangedDetails = new PointsChangedDetails() };
+        var pointsChangeDetails = new PointsChangedDetails();
 
         var userPoints = GetPoints(rule, sourceUserPoints, out var kolPoints, out var inviterPoints);
-        UpdatePointsBalance(user, domain, IncomeSourceType.User, pointName, userPoints);
+        pointsChangeDetails = UpdatePointsBalance(user, domain, IncomeSourceType.User, pointName, userPoints, dappId,
+            actionName, pointsChangeDetails);
 
-        pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName,
-            IncomeSourceType.User, pointName, userPoints, dappId));
         if (domain != State.DappInfos[dappId].OfficialDomain)
         {
             var domainRelationship = State.DomainsMap[domain];
             var invitee = domainRelationship.Invitee;
 
-            UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, pointName, kolPoints);
-            pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-                IncomeSourceType.Kol, pointName, kolPoints, dappId));
+            pointsChangeDetails = UpdatePointsBalance(invitee, domain, IncomeSourceType.Kol, pointName, kolPoints,
+                dappId, actionName, pointsChangeDetails);
 
             var inviter = domainRelationship.Inviter;
             if (inviter != null)
             {
-                UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, pointName, inviterPoints);
-                pointsDetails.PointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-                    IncomeSourceType.Inviter, pointName, inviterPoints, dappId));
+                pointsChangeDetails = UpdatePointsBalance(inviter, domain, IncomeSourceType.Inviter, pointName,
+                    inviterPoints, dappId, actionName, pointsChangeDetails);
+            }
+        }
+        else
+        {
+            var relationInfo = State.ReferralRelationInfoMap[dappId][user];
+            if (relationInfo != null)
+            {
+                var referrerDomain = State.RegistrationMap[dappId][relationInfo.Referrer];
+                pointsChangeDetails = UpdatePointsBalance(relationInfo.Referrer, referrerDomain, IncomeSourceType.User,
+                    pointName, kolPoints, dappId, actionName, pointsChangeDetails);
+
+                if (relationInfo.Inviter != null)
+                {
+                    pointsChangeDetails = UpdatePointsBalance(relationInfo.Inviter, domain, IncomeSourceType.User,
+                        pointName, inviterPoints, dappId, actionName, pointsChangeDetails);
+                }
+
+                if (referrerDomain != domain)
+                {
+                    var domainRelationship = State.DomainsMap[referrerDomain];
+                    var invitee = domainRelationship.Invitee;
+                    var points = kolPoints.Mul(rule.KolPointsPercent).Div(PointsContractConstants.Denominator);
+
+                    pointsChangeDetails = UpdatePointsBalance(invitee, referrerDomain, IncomeSourceType.Kol, pointName,
+                        points, dappId, actionName, pointsChangeDetails);
+                }
             }
         }
 
         // All points actions will be settled by self-increasing points.
         var details = SettlingSelfIncreasingPoints(dappId, user);
         if (details.PointsDetails.Count > 0)
-            pointsDetails.PointsChangedDetails.PointsDetails.AddRange(details.PointsDetails);
+            pointsChangeDetails.PointsDetails.AddRange(details.PointsDetails);
         // Points details
-        Context.Fire(pointsDetails);
+        Context.Fire(new PointsChanged { PointsChangedDetails = pointsChangeDetails });
     }
 
     private BigIntValue GetPoints(PointsRule rule, BigIntValue sourceUserPoints, out BigIntValue kolPoints,
         out BigIntValue inviterPoints)
     {
-        if (rule.EnableProportionalCalculation)
-        {
-            Assert(sourceUserPoints != null && sourceUserPoints.Value != "0", "Invalid user points.");
-        }
+        sourceUserPoints ??= new BigIntValue(rule.UserPoints);
 
         var userPoints = rule.EnableProportionalCalculation ? sourceUserPoints : rule.UserPoints;
         kolPoints = GetKolPoints(rule, sourceUserPoints);
@@ -170,36 +189,73 @@ public partial class PointsContract
         var pointName = pointsRule.PointName;
         var actionName = pointsRule.ActionName;
         var domain = State.RegistrationMap[dappId][user];
+
         var pointsDetails = new PointsChangedDetails();
 
         // settle user
         // Only registered users can calculate self-increasing points, and only registered users have settlement time.
-        var userIncreasingPoint = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName,
-            pointsRule.UserPoints, domain);
-        pointsDetails.PointsDetails.Add(GeneratePointsDetail(user, domain, actionName, IncomeSourceType.User, pointName,
-            userIncreasingPoint, dappId));
-
-        // settle invitee
-        if (domain == State.DappInfos[dappId].OfficialDomain) return pointsDetails;
+        pointsDetails = UpdateSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName,
+            pointsRule.UserPoints, domain, actionName, pointsDetails);
 
         var domainRelationship = State.DomainsMap[domain];
-        var invitee = domainRelationship.Invitee;
-        var kolPoints = GetKolPoints(pointsRule);
-        var kolIncreasingPoint = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName,
-            kolPoints, domain);
-        pointsDetails.PointsDetails.Add(GeneratePointsDetail(invitee, domain, actionName,
-            IncomeSourceType.Kol, pointName, kolIncreasingPoint, dappId));
+        if (domainRelationship != null)
+        {
+            // settle kol
+            var invitee = domainRelationship.Invitee;
+            var kolPoints = GetKolPoints(pointsRule);
+            pointsDetails = UpdateSelfIncreasingPoint(dappId, invitee, IncomeSourceType.Kol, pointName,
+                kolPoints, domain, actionName, pointsDetails);
 
-        // settle inviter
-        // kol registered a domain for himself but there was no inviter
-        var inviter = domainRelationship.Inviter;
-        if (inviter == null) return pointsDetails;
+            // settle inviter
+            // kol registered a domain for himself but there was no inviter
+            var inviter = domainRelationship.Inviter;
+            if (inviter != null)
+            {
+                var inviterPoints = GetInviterPoints(pointsRule);
+                pointsDetails = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
+                    inviterPoints, domain, actionName, pointsDetails);
+            }
+        }
 
-        var inviterPoints = GetInviterPoints(pointsRule);
-        var inviterIncreasingPoint = UpdateSelfIncreasingPoint(dappId, inviter, IncomeSourceType.Inviter, pointName,
-            inviterPoints, domain);
-        pointsDetails.PointsDetails.Add(GeneratePointsDetail(inviter, domain, actionName,
-            IncomeSourceType.Inviter, pointName, inviterIncreasingPoint, dappId));
+        // settle user referral points
+        pointsDetails = UpdateReferralSelfIncreasingPoint(dappId, user, IncomeSourceType.User, pointName,
+            pointsRule, domain, actionName, pointsDetails);
+
+        // settle referrer referral points
+        var relationInfo = State.ReferralRelationInfoMap[dappId][user];
+        if (relationInfo == null) return pointsDetails;
+
+        var referrerDomain = State.RegistrationMap[dappId][relationInfo.Referrer];
+        pointsDetails = UpdateSelfIncreasingPoint(dappId, relationInfo.Referrer, IncomeSourceType.User, pointName,
+            pointsRule.UserPoints, referrerDomain, actionName, pointsDetails);
+        pointsDetails = UpdateReferralSelfIncreasingPoint(dappId, relationInfo.Referrer, IncomeSourceType.User,
+            pointName, pointsRule, referrerDomain, actionName, pointsDetails);
+
+        // settle inviter referral points
+        if (relationInfo.Inviter != null)
+        {
+            pointsDetails = UpdateSelfIncreasingPoint(dappId, relationInfo.Inviter, IncomeSourceType.User, pointName,
+                pointsRule.UserPoints, domain, actionName, pointsDetails);
+            pointsDetails = UpdateReferralSelfIncreasingPoint(dappId, relationInfo.Inviter,
+                IncomeSourceType.User, pointName, pointsRule, domain, actionName, pointsDetails);
+        }
+
+        // settle kol referral points
+        var referrerDomainRelationship = State.DomainsMap[referrerDomain];
+
+        if (referrerDomainRelationship == null) return pointsDetails;
+
+        var kol = referrerDomainRelationship.Invitee;
+        if (IsStringValid(State.RegistrationMap[dappId][kol]))
+        {
+            pointsDetails = UpdateSelfIncreasingPoint(dappId, kol, IncomeSourceType.Kol, pointName, pointsRule.UserPoints,
+                referrerDomain, actionName, pointsDetails);
+        }
+        
+        pointsDetails = UpdateSelfIncreasingPoint(dappId, kol, IncomeSourceType.Kol, pointName,
+            GetKolPoints(pointsRule), referrerDomain, actionName, pointsDetails);
+        pointsDetails = UpdateReferralSelfIncreasingPoint(dappId, kol, IncomeSourceType.Kol, pointName,
+            pointsRule, referrerDomain, actionName, pointsDetails);
 
         return pointsDetails;
     }
@@ -220,22 +276,24 @@ public partial class PointsContract
             : new BigIntValue(pointsRule.InviterPointsPercent);
     }
 
-    private BigIntValue UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type, string pointName,
-        BigIntValue points, string domain)
+    private PointsChangedDetails UpdateSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type,
+        string pointName, BigIntValue points, string domain, string actionName,
+        PointsChangedDetails pointsChangedDetails)
     {
         var lastBlockTimestamp = State.LastPointsUpdateTimes[dappId][address][domain][type];
-        var waitingSettledPoints = new BigIntValue(0);
         if (lastBlockTimestamp != null)
         {
             var lastBlockTime = lastBlockTimestamp.Seconds;
-            waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
+            var waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPoints(dappId, address, type,
                 Context.CurrentBlockTime.Seconds, lastBlockTime, domain, points);
 
-            UpdatePointsBalance(address, domain, type, pointName, waitingSettledPoints);
+            pointsChangedDetails = UpdatePointsBalance(address, domain, type, pointName, waitingSettledPoints, dappId,
+                actionName, pointsChangedDetails);
         }
 
         State.LastPointsUpdateTimes[dappId][address][domain][type] = Context.CurrentBlockTime;
-        return waitingSettledPoints;
+
+        return pointsChangedDetails;
     }
 
     private BigIntValue CalculateWaitingSettledSelfIncreasingPoints(Hash dappId, Address address, IncomeSourceType type,
@@ -251,13 +309,18 @@ public partial class PointsContract
         };
     }
 
-    private void UpdatePointsBalance(Address address, string domain, IncomeSourceType type, string pointName,
-        BigIntValue amount)
+    private PointsChangedDetails UpdatePointsBalance(Address address, string domain, IncomeSourceType type,
+        string pointName, BigIntValue amount, Hash dappId, string actionName, PointsChangedDetails pointsChangedDetails)
     {
         var balance = State.PointsBalance[address][domain][type][pointName];
         var pointsBalance = State.PointsBalanceValue[address][domain][type][pointName] ?? new BigIntValue(balance);
         pointsBalance = pointsBalance.Add(amount);
         State.PointsBalanceValue[address][domain][type][pointName] = pointsBalance;
+
+        pointsChangedDetails.PointsDetails.Add(GeneratePointsDetail(address, domain, actionName, type, pointName,
+            amount, dappId));
+
+        return pointsChangedDetails;
     }
 
     private PointsChangedDetail GeneratePointsDetail(Address address, string domain, string actionName,
@@ -317,5 +380,142 @@ public partial class PointsContract
         AssertInitialized();
         AssertDappContractAddress(dappId);
         Assert(IsStringValid(actionName), "Invalid action name.");
+    }
+
+    private void Register(Hash dappId, Address sender, string domain, string actionName)
+    {
+        Assert(string.IsNullOrEmpty(State.RegistrationMap[dappId][sender]), "A dapp can only be registered once.");
+        State.RegistrationMap[dappId][sender] = domain;
+
+        SettlingPoints(dappId, sender, actionName);
+    }
+
+    public override Empty AcceptReferral(AcceptReferralInput input)
+    {
+        Assert(input != null, "Invalid input.");
+
+        var dappId = input.DappId;
+        AssertDappContractAddress(dappId);
+
+        var officialDomain = State.DappInfos[dappId].OfficialDomain;
+
+        var referrer = input.Referrer;
+        Assert(IsAddressValid(referrer), "Invalid referrer.");
+        var referrerDomain = State.RegistrationMap[dappId][referrer];
+        Assert(IsStringValid(referrerDomain), "Referrer not joined.");
+
+        var invitee = input.Invitee;
+        Assert(IsAddressValid(invitee), "Invalid invitee.");
+
+        var inviter = State.ReferralRelationInfoMap[dappId][referrer]?.Referrer;
+        State.ReferralRelationInfoMap[dappId][invitee] = new ReferralRelationInfo
+        {
+            DappId = dappId,
+            Invitee = invitee,
+            Referrer = referrer,
+            Inviter = inviter
+        };
+
+        State.ReferralFollowerCountMap[dappId][invitee] = new ReferralFollowerCount();
+
+        Register(dappId, invitee, officialDomain, nameof(AcceptReferral));
+
+        SetFollowerCount(dappId, referrer, 1, 0);
+        SetFollowerCount(dappId, inviter, 0, 1);
+
+        var kol = State.DomainsMap[referrerDomain]?.Invitee;
+        SetFollowerCount(dappId, kol, 0, 1);
+
+        Context.Fire(new ReferralAccepted
+        {
+            DappId = dappId,
+            Domain = officialDomain,
+            Referrer = referrer,
+            Invitee = invitee,
+            Inviter = inviter
+        });
+
+        return new Empty();
+    }
+
+    private void SetFollowerCount(Hash dappId, Address address, long followerCount, long subFollowerCount)
+    {
+        if (address == null) return;
+
+        var referralFollowerCount = State.ReferralFollowerCountMap[dappId][address];
+
+        if (referralFollowerCount == null)
+        {
+            State.ReferralFollowerCountMap[dappId][address] = new ReferralFollowerCount
+            {
+                FollowerCount = followerCount,
+                SubFollowerCount = subFollowerCount
+            };
+        }
+        else
+        {
+            referralFollowerCount.FollowerCount = referralFollowerCount.FollowerCount.Add(followerCount);
+            referralFollowerCount.SubFollowerCount = referralFollowerCount.SubFollowerCount.Add(subFollowerCount);
+        }
+    }
+
+    private PointsChangedDetails UpdateReferralSelfIncreasingPoint(Hash dappId, Address address, IncomeSourceType type,
+        string pointName, PointsRule pointsRule, string domain, string actionName,
+        PointsChangedDetails pointsChangedDetails)
+    {
+        var lastBlockTimestamp = State.ReferralPointsUpdateTimes[dappId][address][domain][type] ??
+                                 State.LastPointsUpdateTimes[dappId][address][domain][type];
+        if (lastBlockTimestamp != null)
+        {
+            var lastBlockTime = lastBlockTimestamp.Seconds;
+            var waitingSettledPoints = CalculateWaitingSettledSelfIncreasingPointsForReferral(dappId, address,
+                Context.CurrentBlockTime.Seconds, lastBlockTime, pointsRule, domain);
+
+            pointsChangedDetails = UpdatePointsBalance(address, domain, type, pointName, waitingSettledPoints, dappId,
+                actionName, pointsChangedDetails);
+        }
+
+        State.ReferralPointsUpdateTimes[dappId][address][domain][type] = Context.CurrentBlockTime;
+
+        return pointsChangedDetails;
+    }
+
+    private BigIntValue CalculateWaitingSettledSelfIncreasingPointsForReferral(Hash dappId, Address address,
+        long currentBlockTime, long lastBlockTime, PointsRule pointsRule, string domain)
+    {
+        var totalPoints = new BigIntValue(0);
+
+        var timeGap = currentBlockTime.Sub(lastBlockTime);
+
+        var followerCount = State.ReferralFollowerCountMap[dappId][address];
+        if (followerCount == null) return totalPoints;
+
+        var domainRelationshipInfo = State.DomainsMap[domain];
+
+        // kol
+        if (domainRelationshipInfo != null && address == domainRelationshipInfo.Invitee)
+        {
+            totalPoints = totalPoints.Add(CalculatePoints(pointsRule.UserPoints, pointsRule.KolPointsPercent,
+                    followerCount.SubFollowerCount, timeGap)
+                .Mul(pointsRule.KolPointsPercent)
+                .Div(PointsContractConstants.Denominator));
+        }
+        else
+        {
+            // calculate follower points
+            totalPoints = totalPoints.Add(CalculatePoints(pointsRule.UserPoints, pointsRule.KolPointsPercent,
+                followerCount.FollowerCount, timeGap));
+
+            // calculate subFollower points
+            totalPoints = totalPoints.Add(CalculatePoints(pointsRule.UserPoints, pointsRule.InviterPointsPercent,
+                followerCount.SubFollowerCount, timeGap));
+        }
+
+        return totalPoints;
+    }
+
+    private BigIntValue CalculatePoints(BigIntValue points, long percent, long count, long timeGap)
+    {
+        return points.Mul(percent).Div(PointsContractConstants.Denominator).Mul(count).Mul(timeGap);
     }
 }

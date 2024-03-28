@@ -225,6 +225,8 @@ public partial class PointsContractTests : PointsContractTestBase
             { DappId = dappId, PointsName = JoinPointName, Decimals = 8 });
         await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
             { DappId = dappId, PointsName = SelfIncreasingPointName, Decimals = 8 });
+        await PointsContractStub.CreatePoint.SendAsync(new CreatePointInput
+            { DappId = dappId, PointsName = SettlePointName, Decimals = 8 });
     }
     
     private async Task CreatePointForSettle(Hash dappId)

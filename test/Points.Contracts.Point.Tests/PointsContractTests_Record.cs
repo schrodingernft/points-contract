@@ -391,4 +391,104 @@ public partial class PointsContractTests
         });
         result.TransactionResult.Error.ShouldContain("A dapp can only be registered once.");
     }
+
+    [Fact]
+    public async Task ApplyToBeAdvocateTestsUpdated()
+    {
+        const string domain = "user.com";
+        const string domain2 = "user2.com";
+        const string domain3 = "user3.com";
+
+        await Initialize();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
+        await SetDappPointsRules(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
+        await SetMaxApplyCount();
+
+        {
+            var result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
+            {
+                Domain = domain,
+                DappId = dappId,
+                Invitee = User2Address,
+                Inviter = UserAddress
+            });
+            result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
+
+            var log = GetLogEvent<InviterApplied>(result.TransactionResult);
+            log.DappId.ShouldBe(dappId);
+            log.Domain.ShouldBe(domain);
+            log.Invitee.ShouldBe(User2Address);
+            log.Inviter.ShouldBe(UserAddress);
+
+            var output = await PointsContractStub.GetDomainApplyInfo.CallAsync(new StringValue { Value = domain });
+            output.Domain.ShouldBe(domain);
+            output.Invitee.ShouldBe(User2Address);
+            output.Inviter.ShouldBe(UserAddress);
+        }
+        {
+            var result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
+            {
+                Domain = domain2,
+                DappId = dappId,
+                Invitee = UserAddress
+            });
+            result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
+
+            var log = GetLogEvent<InviterApplied>(result.TransactionResult);
+            log.DappId.ShouldBe(dappId);
+            log.Domain.ShouldBe(domain2);
+            log.Invitee.ShouldBe(UserAddress);
+            log.Inviter.ShouldBe(DefaultAddress);
+
+            var output = await PointsContractStub.GetDomainApplyInfo.CallAsync(new StringValue { Value = domain2 });
+            output.Domain.ShouldBe(domain2);
+            output.Invitee.ShouldBe(UserAddress);
+            output.Inviter.ShouldBe(DefaultAddress);
+        }
+        {
+            var result = await PointsContractStub.ApplyToBeAdvocate.SendAsync(new ApplyToBeAdvocateInput
+            {
+                Domain = domain3,
+                DappId = dappId,
+                Invitee = DefaultAddress,
+                Inviter = DefaultAddress
+            });
+            result.TransactionResult.Status.ShouldBe(TransactionResultStatus.Mined);
+
+            var log = GetLogEvent<InviterApplied>(result.TransactionResult);
+            log.DappId.ShouldBe(dappId);
+            log.Domain.ShouldBe(domain3);
+            log.Invitee.ShouldBe(DefaultAddress);
+            log.Inviter.ShouldBe(DefaultAddress);
+
+            var output = await PointsContractStub.GetDomainApplyInfo.CallAsync(new StringValue { Value = domain3 });
+            output.Domain.ShouldBe(domain3);
+            output.Invitee.ShouldBe(DefaultAddress);
+            output.Inviter.ShouldBeNull();
+        }
+    }
+
+    [Fact]
+    public async Task ApplyToBeAdvocateTestsUpdated_Fail()
+    {
+        const string domain = "user.com";
+
+        await Initialize();
+        var dappId = await AddDapp();
+        await CreatePoint(dappId);
+        await SetDappPointsRules(dappId);
+        await SetSelfIncreasingPointsRules(dappId);
+        await SetMaxApplyCount();
+
+        var result = await PointsContractStub.ApplyToBeAdvocate.SendWithExceptionAsync(new ApplyToBeAdvocateInput
+        {
+            Domain = domain,
+            DappId = dappId,
+            Invitee = User2Address,
+            Inviter = new Address()
+        });
+        result.TransactionResult.Error.ShouldContain("Invalid inviter.");
+    }
 }
